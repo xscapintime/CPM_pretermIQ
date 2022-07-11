@@ -3,4 +3,7 @@
 *.Rda
 *.xlsx
 *.csv
+*.tsv
 *.png
+*.pdf
+*.docx
