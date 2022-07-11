@@ -111,3 +111,7 @@ par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.mai
 hist(FD_df_after_exclusions$fd.max,30, xlab=expression(paste("max FD (mm)",sep="")), ylab="frequency",main="",col="grey90",xlim=c(0,1.5))
 abline(v=max_cutoff, lty=2,col="grey") #lines for cutoffs - for exclusion 
 dev.off()
+
+
+## save 
+save(FD_df_after_exclusions, file = "FD_df_after_exclusions.RData")
