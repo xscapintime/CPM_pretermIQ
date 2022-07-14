@@ -4,6 +4,7 @@
 *.xlsx
 *.csv
 *.tsv
+*.txt
 *.png
 *.pdf
 *.docx

@@ -87,10 +87,10 @@ FD_df <- stats %>% select(AP_id, sex, group, ga, birth_weight, bayley22_language
 
 toexclu <- unique(c(which(fd.m >= mean_cutoff), which(fd.max >= max_cutoff)))
 
-#so now we exlclude IDs 23, 11
+#so now we exlclude IDs
 #we exlclude 10 IDs - fd exclusions
 fd_exclusions <- toexclu
-FD_df[fd_exclusions,]
+# FD_df[fd_exclusions,]
 
 
 #### data frame after FD
@@ -108,7 +108,7 @@ dev.off()
 # max fd
 pdf(paste0(plot.path,"hist_max_fd_after_FD_", max_cutoff, "co_exclusions.pdf"),width=6,height=5)
 par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.main = 1, bg="white")
-hist(FD_df_after_exclusions$fd.max,30, xlab=expression(paste("max FD (mm)",sep="")), ylab="frequency",main="",col="grey90",xlim=c(0,1.5))
+hist(FD_df_after_exclusions$fd.max,30, xlab=expression(paste("max FD (mm)",sep="")), ylab="frequency",main="",col="grey90",xlim=c(0,1))
 abline(v=max_cutoff, lty=2,col="grey") #lines for cutoffs - for exclusion 
 dev.off()
 
