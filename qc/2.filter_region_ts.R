@@ -164,3 +164,5 @@ par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.mai
 hist(df_final$fd.max,30, xlab=expression(paste('max FD (mm)',sep='')), ylab='frequency',main='',col='grey90',xlim=c(0,1))
 abline(v=max_cutoff,lty=2,col='grey') #lines for cutoffs - for exclusion 
 dev.off()
+
+save(df_final, file = "df_final.RData")
