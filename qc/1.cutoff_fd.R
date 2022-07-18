@@ -28,8 +28,8 @@ plot.path = "./plots/"
 
 # #### demographic information - age, sex etc. (as vectors of length ns) ####
 # ID list
-id <- read_excel("For Liyang - IDs resting state preprocessed.xlsx")
-stats <- read_excel("../pca/ePrime_BIPP_master_file_GEORGE_LHv4 correct tmcq.xlsx")
+id <- read_excel("../data/For Liyang - IDs resting state preprocessed.xlsx") ## AP ID
+stats <- read_excel("../data/ePrime_BIPP_master_file_GEORGE_LHv4 correct tmcq.xlsx")
 
 stats <- stats %>% filter(AP_id %in% id$IDs)
 
@@ -39,7 +39,7 @@ nt = 400 #number of time series
 ns = nrow(id) #number of subjects - 220
 
 #### framewise displacement - get from fmriprep .tsv file ####
-fd.path = "./framwise_displacement/"
+fd.path = "../data/framwise_displacement/"
 
 fd <- matrix(NA, nrow=nt-1, ncol=ns)
 for (i in 1:ns) {
@@ -63,7 +63,7 @@ nt = dim(fd)[1] + 1 ## 400 in this case
 
 #### histograms before FD exclusions (limits require manual adjustment) ####
 # mean fd
-mean_cutoff <- 0.1
+mean_cutoff <- 0.15
 pdf(paste0(plot.path,"hist_mean_fd_cutoff_", mean_cutoff, ".pdf"),width=6,height=5)
 par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.main = 1, bg="white")
 hist(fd.m,30, xlab=expression(paste(mu, " FD (mm)",sep="")), ylab="frequency",main="",col="grey90",xlim=c(0,0.2))
@@ -71,7 +71,7 @@ abline(v=mean_cutoff,lty=2,col="grey") #lines for cutoffs - for exclusion
 dev.off()
 
 # max fd
-max_cutoff <- 0.6
+max_cutoff <- 1
 pdf(paste0(plot.path,"hist_max_fd_cutoff_",max_cutoff, ".pdf"),width=6,height=5)
 par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.main = 1, bg="white")
 hist(fd.max,30, xlab=expression(paste("max FD (mm)",sep="")), ylab="frequency",main="",col="grey90",xlim=c(0,1.5))
