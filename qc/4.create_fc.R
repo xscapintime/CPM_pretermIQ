@@ -49,7 +49,10 @@ for (n in 1:ns.f) {
 ## save object
 save(fc, file = "fc.RData")
 ## save as individual matrices for python CPM
-
+for (i in 1:ns.f) {
+  write.table(fc[,,i], file = paste0("../data/fc_individual/", df_final$AP_id[i], ".fc.txt"), sep = " ",
+              quote = F, row.names = F, col.names = F)
+}
 
 
 #### subjs 76: "UCCHILDHB050" and 106:"UCCHILDHB090" have almost competely missing brains in rsFMRI ####
