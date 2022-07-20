@@ -1,4 +1,5 @@
 #### ======= loop to create fc ========= ####
+rm(list = ls())
 setwd("/mnt/d/PROJECTS/preterm_language/qc")
 
 library(dplyr)
@@ -27,6 +28,7 @@ plot.path = "./plots/"
 # load ts.final, df_final
 load("ts.final.RData")
 load("df_final.RData")
+
 
 # create fc
 nroi.f = dim(ts.final)[2]  #new number of rois -previous nroi (initial) = nroi
@@ -71,8 +73,16 @@ for (i in 1:ns.f) {
 #can detect outliers here
 
 #set up density plot parameters
+# indices of upper triangular part of matrix
 triup = upper.tri(matrix(nrow=nroi.f,ncol=nroi.f))
 
+# mean FC
+fc.m_final = vector(length=ns.f)
+for (n in 1:ns.f) fc.m_final[n] = mean(fc[,,n][triup],na.rm=T)
+save(fc.m_final, file = "fc.m_final.RData")
+
+
+## density plots
 dens.n = 500   # number of points in distribution
 dens.i = -1.5; dens.f = 2.5      # initial and final values for distributions - determine by looking at the range on fc
 abl = c(-1.5,0.5,1.5,2.5);       # horizontal lines on plots - also depends on your range
@@ -89,7 +99,6 @@ for (i in 1:ns.f) {
 # identify ranges of values, to fix axes
 summary(c(dens.y.raw,dens.y)) # to set ylim for the plot:
 
-df_final$sex <- ifelse(df_final$sex == "Male", 1, 0)
 
 # age_final = df_final$age
 id_final=df_final$AP_id
@@ -114,25 +123,6 @@ for (n in 1:ns.f) {
 dev.off()
 
 
-# coordinates of ROI centroids (dimension nroi x 3 (= x, y, z))
-pos <- read.table("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", quote="\"", comment.char="")
-
-
-# matrix of euclidean distance between regions
-dist = matrix(nrow=nroi.f,ncol=nroi.f)
-for (i in 1:nroi.f) {
-    for (j in 1:nroi.f) {
-        dist[i,j] = sqrt(sum((pos[i,]-pos[j,])^2))
-    } 
-}
-
-# indices of upper triangular part of matrix
-triup = upper.tri(matrix(nrow=nroi.f,ncol=nroi.f))
-# mean FC
-fc.m_final = vector(length=ns.f)
-for (n in 1:ns.f) fc.m_final[n] = mean(fc[,,n][triup],na.rm=T)
-
-
 #### plot violin and boxplots of mean FD and max FD by group - run t-tests ####
 #http://www.sthda.com/english/wiki/ggplot2-violin-plot-quick-start-guide-r-software-and-data-visualization
 library(ggplot2)
@@ -152,7 +142,7 @@ dev.off()
 
 #### assumptions ####
 library(lawstat)
-## check if our data sets fulfill the homogeneity of variance assumption before we perform the t-test or Analysis of Variance (ANOVA).
+## check if data sets fulfill the homogeneity of variance assumption
 levene.test(df_final$fd.m, df_final$group, location = c("mean")) # p-value = 0.9407
 levene.test(df_final$fd.max, df_final$group, location = c("mean")) # p-value = 0.1452
 # PT and FT have equal variance?

@@ -1,5 +1,6 @@
 #### =========== load time series =========== ####
 ### filtering subjects out by their mising regions
+rm(list = ls())
 setwd("/mnt/d/PROJECTS/preterm_language/qc")
 
 library(dplyr)
@@ -174,3 +175,4 @@ dev.off()
 ## save obejct for later scripts
 save(ts.final, file = "ts.final.RData")
 save(df_final, file = "df_final.RData")
+save.image("2.filter_region_ts.RData")

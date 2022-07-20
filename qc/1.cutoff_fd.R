@@ -1,6 +1,6 @@
 ### ============ filtering subjects ================= ###
 ### delete subjects with outliner mean/max FD value
-
+rm(list = ls())
 setwd("/mnt/d/PROJECTS/preterm_language/qc")
 
 #### load libraries  ####
@@ -115,3 +115,4 @@ dev.off()
 
 ## save 
 save(FD_df_after_exclusions, file = "FD_df_after_exclusions.RData")
+save.image("1.cutoff_fd.RData")
