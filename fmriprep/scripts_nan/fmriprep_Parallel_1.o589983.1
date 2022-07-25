@@ -1,0 +1,49 @@
+Warning: no access to tty (Bad file descriptor).
+Thus no job control in this shell.
+Currently Loaded Modulefiles:
+ 1) nan/default          5) fsl/5.0.11(default)        
+ 2) sge/8.1.7(default)   6) freesurfer/6.0.0(default)  
+ 3) dcmtk/3.6.5          7) singularity/default <aL>   
+ 4) cuda/7.5 <aL>        8) fmriprep/20.1.1            
+
+Key:
+(symbolic-version)  <module-tag>  <aL>=auto-loaded  
+BIPP021
+You are using fMRIPrep-20.1.1, and a newer version of fMRIPrep is available: 21.0.2.
+Please check out our documentation about how and when to upgrade:
+https://fmriprep.readthedocs.io/en/latest/faq.html#upgrading
+WARNING: Version 20.1.1 of fMRIPrep (current) has been FLAGGED
+(reason: Functional outputs in standard space can be wrong depending on the original data's orientation headers - see https://github.com/nipreps/fmriprep/issues/2307).
+That means some severe flaw was found in it and we strongly
+discourage its usage.
+Traceback (most recent call last):
+  File "/usr/local/miniconda/bin/fmriprep", line 10, in <module>
+    sys.exit(main())
+  File "/usr/local/miniconda/lib/python3.7/site-packages/fmriprep/cli/run.py", line 17, in main
+    parse_args()
+  File "/usr/local/miniconda/lib/python3.7/site-packages/fmriprep/cli/parser.py", line 566, in parse_args
+    opts = parser.parse_args(args, namespace)
+  File "/usr/local/miniconda/lib/python3.7/argparse.py", line 1749, in parse_args
+    args, argv = self.parse_known_args(args, namespace)
+  File "/usr/local/miniconda/lib/python3.7/argparse.py", line 1781, in parse_known_args
+    namespace, args = self._parse_known_args(args, namespace)
+  File "/usr/local/miniconda/lib/python3.7/argparse.py", line 1987, in _parse_known_args
+    start_index = consume_optional(start_index)
+  File "/usr/local/miniconda/lib/python3.7/argparse.py", line 1927, in consume_optional
+    take_action(action, args, option_string)
+  File "/usr/local/miniconda/lib/python3.7/argparse.py", line 1855, in take_action
+    action(self, namespace, argument_values, option_string)
+  File "/usr/local/miniconda/lib/python3.7/site-packages/niworkflows/utils/spaces.py", line 684, in __call__
+    for sp in Reference.from_string(val):
+  File "/usr/local/miniconda/lib/python3.7/site-packages/niworkflows/utils/spaces.py", line 312, in from_string
+    return [cls(_args[0], s) for s in allspecs]
+  File "/usr/local/miniconda/lib/python3.7/site-packages/niworkflows/utils/spaces.py", line 312, in <listcomp>
+    return [cls(_args[0], s) for s in allspecs]
+  File "<attrs generated init niworkflows.utils.spaces.Reference>", line 11, in __init__
+  File "/usr/local/miniconda/lib/python3.7/site-packages/niworkflows/utils/spaces.py", line 224, in _check_name
+    "identifiers are: %s" % (value, ", ".join(valid))
+ValueError: space identifier "MyCustom" is invalid.
+Valid identifiers are: MNI152Lin, MNI152NLin2009cAsym, MNI152NLin2009cSym, MNI152NLin6Asym, MNI152NLin6Sym, MNIInfant, MNIPediatricAsym, NKI, OASIS30ANTs, PNC, WHS, fsLR, fsaverage, T1w, T2w, anat, fsnative, func, run, sbref, session
+BIPP021 finished running fmriprep full
+deleting BIPP021 workflow files
+done deleting BIPP021 workflow files
