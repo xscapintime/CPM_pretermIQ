@@ -74,14 +74,14 @@ colninx <- paste0("Mean_", seq(1,376))
 for (id in c("AP068", "AP078", "AP099", "AP132")) {
     tmp <- read.table(paste(ts.path,'sub-', id,'_glasserROI_timeseries_sept29.txt',sep=''), header=TRUE)[,-c(1:2)]
     ms_r <- setdiff(colninx, colnames(tmp)) %>% gsub("Mean_","",.) %>% str_c(., collapse = " ")
-    print(paste0(id, ": region ", ms_r))
+    print(paste0(id, ": missing region ", ms_r))
 
 }
 
-# [1] "AP068: region 30 135 136 142 252 256 370 371 372 373 374 375 376"
-# [1] "AP078: region 310 370 371 372 373 374 375 376"
-# [1] "AP099: region 136"
-# [1] "AP132: region 316"
+# [1] "AP068: missing region 30 135 136 142 252 256 370 371 372 373 374 375 376"
+# [1] "AP078: missing region 310 370 371 372 373 374 375 376"
+# [1] "AP099: missing region 136"
+# [1] "AP132: missing region 316"
 
 
 
@@ -130,8 +130,8 @@ for (i in 1:ns_hippNAs) {
 which(id_with_hippNAs_ts=="AP099") #1 - missing region 136
 which(id_with_hippNAs_ts=="AP132") #2 - missing region 316
 
-ts_hippNAs_1 <- ts_hippNAs[,-c(136), c(1)] #exclude left (136) - right (316) already missing
-ts_hippNAs_2 <- ts_hippNAs[,-c(315), c(2)]  #exclude right(316) - left (136) already missing, 315 is becuz now the order and total n are changed
+ts_hippNAs_1 <- ts_hippNAs[,-c(316), c(1)] #exclude right (316) - left (136) already missing
+ts_hippNAs_2 <- ts_hippNAs[,-c(135), c(2)]  #exclude left (136) -  right (316) already missing, 135 is becuz now the order and total n are changed
 
 
 #then merge the no_NA_noHipp ts with the NA_noHipp ts
@@ -150,8 +150,8 @@ FD_df_after_all_exclusions <- FD_df_after_exclusions[-which(id_clean_FD %in% c("
 dim(FD_df_after_all_exclusions)
 # [1] 103 11
 
-df_final <- FD_df_after_all_exclusions #%>%
-  #arrange(factor(FD_df_after_all_exclusions$AP_id, levels = id_final))
+df_final <- FD_df_after_all_exclusions %>%
+  arrange(factor(FD_df_after_all_exclusions$AP_id, levels = id_final))
 
 
 #### histograms AFTER FD and missing region subjects exclusions (limits require manual adjustment)  ####
