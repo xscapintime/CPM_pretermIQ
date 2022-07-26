@@ -28,15 +28,21 @@ plot.path = "./plots/"
 
 # #### demographic information - age, sex etc. (as vectors of length ns) ####
 # ID list
-id <- read_excel("../data/For Liyang - IDs resting state preprocessed.xlsx") ## AP ID
-stats <- read_excel("../data/ePrime_BIPP_master_file_GEORGE_LHv4 correct tmcq.xlsx")
+# id <- read_excel("../data/For Liyang - IDs resting state preprocessed.xlsx") ## AP ID
+# stats <- read_excel("../data/ePrime_BIPP_master_file_GEORGE_LHv4 correct tmcq.xlsx")
 
-stats <- stats %>% filter(AP_id %in% id$IDs)
+## updated sheets
+id <-  read_excel("../data/LH scanning database AP EAP BIPP.xlsx", sheet = "AP and BIPP QC_final", skip = 5)
+id <- id$AP_ID[grepl("AP|BIPP", id$AP_ID)]
+
+stats <- read_excel("../data/AP_marking_JULY 2022.xlsx", sheet = "Master", skip=1)
+
+stats <- stats %>% filter(AP_ID %in% id)
 
 
 #### set nt and ns ####
 nt = 400 #number of time series
-ns = nrow(id) #number of subjects - 220
+ns = length(id) #number of subjects
 
 #### framewise displacement - get from fmriprep .tsv file ####
 fd.path = "../data/framwise_displacement/"
@@ -44,12 +50,18 @@ fd.path = "../data/framwise_displacement/"
 fd <- matrix(NA, nrow=nt-1, ncol=ns)
 for (i in 1:ns) {
   if (i%%1==0) print(i)
-    fd[,i] = matrix(as.numeric(unlist(read.table(paste(fd.path,"sub-",id$IDs[i],"_framwise_displacement.tsv",sep = "")))))
+    if (file.exists(paste0(fd.path, "sub-",id[i],"_framwise_displacement.tsv"))) {
+      fd[,i] = matrix(as.numeric(unlist(read.table(paste(fd.path,"sub-",id[i],"_framwise_displacement.tsv",sep = "")))))
+ }
 }
 
 dim(fd) # col = subjects
-# colnames(fd) <- id
+colnames(fd) <- id
 
+# omit na column
+fd <- t(na.omit(t(fd)))
+dim(fd)
+# [1] 399 107
 
 #fd = array(NA,dim=c(nt-1,ns))
 #for (i in 1:ns) {
