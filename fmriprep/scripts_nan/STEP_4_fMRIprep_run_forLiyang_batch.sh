@@ -31,7 +31,7 @@ echo ${subj} finished running fmriprep full
 echo deleting ${subj} workflow files
 
 # rm -r /data/project/BIPP/laila/AP_8yo_fmri_task/scripts/FINAL_scripts/logs/work/fmriprep_wf/single_subject_${subj}_wf
-### rm -r $PWD/logs/work/fmriprep_wf/single_subject_${subj}_wf ###
+rm -r $PWD/work/fmriprep_wf/single_subject_${subj}_wf ###
 
 echo done deleting ${subj} workflow files
 
