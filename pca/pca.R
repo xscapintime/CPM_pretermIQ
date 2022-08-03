@@ -1,6 +1,7 @@
 setwd("/mnt/d/PROJECTS/preterm_language/pca")
 
 library(readxl)
+library(tidyverse)
 library(factoextra)
 # library(FactoMineR)
 library(corrplot)
@@ -27,7 +28,8 @@ tb_merge[tb_merge == -998] <- NA
 # column as variables
 vars <- c("WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-rrb", "srs-sci",
         "bayley22_cog_comp", "bayley22_language_comp", "bayley22_motor_comp", "parca22_cognitive", "parca22_language",
-        "wppsi4_verb_compr_raw", "wppsi4_visuo_sp_raw", "wppsi  4_working_mem_raw", "wppsi4_proc_speed_raw", "srs4_rrb_raw", "srs4_sci_raw")
+        "wppsi4_verb_compr_raw", "wppsi4_visuo_sp_raw", "wppsi4_fluid_res_raw", "wppsi4_working_mem_raw", "wppsi4_proc_speed_raw", "srs4_rrb_raw", "srs4_sci_raw",
+        "MC_COUNT_TOTAL_FAILS_nooffails")
 
 dat <- tb_merge[,vars]
 
