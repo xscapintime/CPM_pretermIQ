@@ -76,6 +76,3 @@ png("corr_new.png", width = 580, height = 580)
 corrplot(rmat, p.mat = pmat, sig.level = c(0.001, 0.01, 0.05), pch.cex = 0.9,
          insig = 'label_sig', pch.col = 'grey20')
 dev.off()
-
-
-
