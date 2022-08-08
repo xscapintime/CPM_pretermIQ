@@ -36,19 +36,44 @@ dat <- tb_merge[,vars]
 
 ## PCA
 dat <- sapply(dat, as.numeric)
-res <- prcomp(na.omit(dat), center = TRUE, scale = T) ##?
+res <- prcomp(na.omit(dat), center = T, scale = T) ##?
+
+summary(res)
 
 ## p-val
-pmat <- corr.test(res$rotation)$p
+# somthing wrong
+## pmat <- corr.test(res$x, adjust = "none")$p
+
+library(Hmisc)
+
+pmat <- rcorr(res$x, na.omit(dat), type = c("pearson"))$P %>% round(., digits = 4)
+pmat <- pmat[-(1:ncol(res$x)), -(ncol(na.omit(dat)):ncol(pmat))]
+
+rmat <- rcorr(res$x, na.omit(dat), type = c("pearson"))$r %>% round(., digits = 4)
+rmat <- rmat[-(1:ncol(res$x)), -(ncol(na.omit(dat)):ncol(rmat))]
+
+
 
 # viz
-png("scree.png",  width = 700, height = 580)
+png("scree.png", width = 700, height = 580)
 fviz_eig(res)
 dev.off()
 
 
+png("scree_allpc.png", width = 700, height = 580)
+fviz_eig(res, ncp = 19)
+dev.off()
+
+
+
 png("corr.png", width = 580, height = 580)
 corrplot(res$rotation, p.mat = pmat, sig.level = c(0.001, 0.01, 0.05), pch.cex = 0.9,
+         insig = 'label_sig', pch.col = 'grey20')
+dev.off()
+
+
+png("corr_new.png", width = 580, height = 580)
+corrplot(rmat, p.mat = pmat, sig.level = c(0.001, 0.01, 0.05), pch.cex = 0.9,
          insig = 'label_sig', pch.col = 'grey20')
 dev.off()
 
