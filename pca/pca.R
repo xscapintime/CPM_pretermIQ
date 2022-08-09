@@ -40,6 +40,33 @@ res <- prcomp(na.omit(dat), center = T, scale = T) ##?
 
 summary(res)
 
+# PCA permutation
+# https://github.com/lucyvanes/preterm-outcomes/blob/main/1_PCA/1_PCA.R
+#===========================================
+#    Run PCA with permutation testing
+#===========================================
+# for each permutation, shuffle rows in each column, re-compute PCA
+# function for the permutation testing taken from:
+# http://bioops.info/2015/01/permutation-pca/
+
+
+sign.pc<-function(x,R=5000,s=10, cor=T,...){
+  pc.out<-princomp(x,cor=cor,...)  # run PCA
+  pve=(pc.out$sdev^2/sum(pc.out$sdev^2))[1:s] # proportion of variance for each PC
+  pve.perm<-matrix(NA,ncol=s,nrow=R)
+  for(i in 1:R){
+    x.perm<-apply(x,2,sample)
+    pc.perm.out<-princomp(x.perm,cor=cor,...)
+    pve.perm[i,]=(pc.perm.out$sdev^2/sum(pc.perm.out$sdev^2))[1:s]
+  }
+  pval<-apply(t(pve.perm)>pve,1,sum)/R # calculate p-values
+  return(list(pve=pve,pval=pval))
+}
+
+pca_sign <- sign.pc(as.data.frame(scale(na.omit(dat), center=T, scale=T)),cor=T)
+pca_sign # the first two PCs are significant
+
+
 ## p-val
 # somthing wrong
 ## pmat <- corr.test(res$x, adjust = "none")$p
