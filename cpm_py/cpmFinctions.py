@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
-%matplotlib inline
+#%matplotlib inline
 import pandas as pd
 import seaborn as sns
 from pathlib import Path
@@ -9,6 +9,10 @@ import os
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+
+# defualt path
+top_dir = Path("./")
+data_dir = top_dir/"fc_data/"
 
 # Read in individual-subject connectivity matrices
 def read_in_matrices(subj_list, file_suffix=None, data_dir=data_dir, zscore=False):

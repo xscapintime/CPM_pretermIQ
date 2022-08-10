@@ -5,7 +5,7 @@
 #$ -j y
 #$ -tc 528
 #$ -l h_vmem=32G
-#$ -V
+
 
 
 set NSLOTS=1
@@ -24,13 +24,14 @@ set subj=`sed "${SGE_TASK_ID}q;d" $list`
 
 echo ${subj}
 
-fmriprep /data/project/BIPP/laila/AP_8yo_fmri_task/Nifti/ /data/project/BIPP/liyang_fmriprep/AP_8yo_fmri_task/output/ participant --participant-label ${subj} --fs-license-file /home/k21188249/license/fmriprep/license.txt --output-spaces T1w MNIPediatricAsym:res-1:cohort-3 MyCustom --skip_bids_validation
+fmriprep /data/project/BIPP/laila/AP_8yo_fmri_task/Nifti/ /data/project/BIPP/laila/AP_8yo_fmri_task/derivatives participant --participant-label ${subj} --fs-license-file /home/k21188249/license/fmriprep/license.txt --output-spaces T1w MNIPediatricAsym:res-1:cohort-3 MyCustom --skip_bids_validation
+
 
 echo ${subj} finished running fmriprep full
 
 echo deleting ${subj} workflow files
 
-# rm -r /data/project/BIPP/laila/AP_8yo_fmri_task/scripts/FINAL_scripts/logs/work/fmriprep_wf/single_subject_${subj}_wf
+#rm -r /data/project/BIPP/laila/AP_8yo_fmri_task/scripts/FINAL_scripts/logs/work/fmriprep_wf/single_subject_${subj}_wf
 rm -r $PWD/work/fmriprep_wf/single_subject_${subj}_wf ###
 
 echo done deleting ${subj} workflow files
