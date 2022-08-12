@@ -3,8 +3,11 @@
 #$ -cwd
 #$ -j y
 #$ -l h_vmem=32G
+#$ -pe smp 4
+#$ -M liyang.shi@kcl.ac.uk
+#$ -m bea
 
-####$ -pe smp 1 # no parallel
+####$ -pe smp 1
 ####$ -tc 528
 
 
