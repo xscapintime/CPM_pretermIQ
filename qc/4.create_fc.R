@@ -43,18 +43,26 @@ for (i in 1:ns.f) {
 # fisher transform correlations
 fc = fisherz(fc.raw)
 
-# set matrix diagonals to NaN
+## save as individual matrices for python CPM
+# diagonals can't be NA
 for (n in 1:ns.f) {
-  fc[,,n][seq(from=1,to=(nroi.f^2),by=(nroi.f+1))] = NaN
+  fc[,,n][seq(from=1,to=(nroi.f^2),by=(nroi.f+1))] <- 3
 }
 
-## save object
-save(fc, file = "fc.RData")
-## save as individual matrices for python CPM
+# export
 for (i in 1:ns.f) {
   write.table(fc[,,i], file = paste0("../data/fc_individual/", df_final$AP_id[i], ".fc.txt"), sep = " ",
               quote = F, row.names = F, col.names = F)
 }
+
+## for in R
+# set matrix diagonals to NaN
+for (n in 1:ns.f) {
+  fc[,,n][seq(from=1,to=(nroi.f^2),by=(nroi.f+1))] <- NaN
+}
+
+## save object
+save(fc, file = "fc.RData")
 
 
 #### subjs 76: "UCCHILDHB050" and 106:"UCCHILDHB090" have almost competely missing brains in rsFMRI ####
