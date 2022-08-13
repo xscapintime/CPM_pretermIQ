@@ -244,8 +244,14 @@ def cpm_wrapper(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
 # plot
 
 def plot_predictions(behav_obs_pred, tail="glm"):
-    x = behav_obs_pred.filter(regex=("obs")).astype(float)
-    y = behav_obs_pred.filter(regex=(tail)).astype(float)
+    # x = behav_obs_pred.filter(regex=("obs")).astype(float)
+    # y = behav_obs_pred.filter(regex=(tail)).astype(float)
+
+    ## dimension bug
+    ## https://stackoverflow.com/a/71546253/14498100
+    x = np.squeeze(behav_obs_pred.filter(regex=("obs")).astype(float))
+    y = np.squeeze(behav_obs_pred.filter(regex=(tail)).astype(float))
+
 
     g = sns.regplot(x=x.T.squeeze(), y=y.T.squeeze(), color='gray')
     ax_min = min(min(g.get_xlim()), min(g.get_ylim()))
@@ -254,8 +260,10 @@ def plot_predictions(behav_obs_pred, tail="glm"):
     g.set_ylim(ax_min, ax_max)
     g.set_aspect('equal', adjustable='box')
     
-    r = sp.stats.pearsonr(x,y)[0][0]
+    r = sp.stats.pearsonr(x,y)[0]
+    p = sp.stats.pearsonr(x,y)[1]
     g.annotate('r = {0:.2f}'.format(r), xy = (0.7, 0.1), xycoords = 'axes fraction')
+    g.annotate('p = {0:.2f}'.format(p), xy = (0.7, 0.05), xycoords = 'axes fraction')
     
     return g
 
