@@ -28,14 +28,17 @@ plot.path = "./plots/"
 ## load FD_df_after_exclusions
 load("FD_df_after_exclusions.RData")
 
-nt= 400 #number of time series
+nt = 400 #number of time series
 nroi = 376 # number of regions
 ts.path = "../data/timeseries_byglasserROIs/" # path to time series
+
+# tmp <- read.table("../data/timeseries_byglasserROIs/sub-AP004_glasserROI_timeseries_sept29.txt", sep='', header=TRUE)
+# 400 376
 
 
 # verify dimensions of text files
 ns = nrow(FD_df_after_exclusions) #new number of subjects
-id_clean_FD <- as.character(FD_df_after_exclusions$AP_id)
+id_clean_FD <- row.names(FD_df_after_exclusions)
 for (i in 1:ns) {
   if (i%%10==0) print(i)
   temp = read.table(paste(ts.path,'sub-',id_clean_FD[i],'_glasserROI_timeseries_sept29.txt',sep=''), header=TRUE)[,-c(1:2)]
@@ -86,7 +89,7 @@ for (id in c("AP068", "AP078", "AP099", "AP132")) {
 
 
 #### time series - only of subjects with no NA regions ####
-id_clean_FD_clean_ts <- id_clean_FD[- which(id_clean_FD %in% c("AP068", "AP078", "AP099", "AP132"))]
+id_clean_FD_clean_ts <- id_clean_FD[-which(id_clean_FD %in% c("AP068", "AP078", "AP099", "AP132"))]
 id_clean_FD_clean_ts <- as.character(id_clean_FD_clean_ts)
 ns_no_NA = length(id_clean_FD_clean_ts)
 
@@ -101,7 +104,8 @@ for (i in 1:ns_no_NA) {
 # as we already have a hippocampus parcellation from the subcortical parcellation
 #### regions 136 (left hippocampus), and 316 (right hippocampus) ####
 ts_no_NA_regions_noHipp <- ts_no_NA_regions[,-c(136, 316),] #exclude the glasser hippocampus regions
-
+dim(ts_no_NA_regions_noHipp)              
+# [1] 400 374 101
 
 #now, for those with regions missing, we will exclude them completely (n=3),
 #those with a hippocampus region missing, we will keep them, (n=4)
@@ -148,10 +152,10 @@ id_final <- unlist(list(id_with_hippNAs_ts[1], id_with_hippNAs_ts[2],
 #df_final in the correct ID order as the ts_final:
 FD_df_after_all_exclusions <- FD_df_after_exclusions[-which(id_clean_FD %in% c("AP068", "AP078")),] #final inclusions but wrong order
 dim(FD_df_after_all_exclusions)
-# [1] 103 11
+# [1] 103 2
 
-df_final <- FD_df_after_all_exclusions %>%
-  arrange(factor(FD_df_after_all_exclusions$AP_id, levels = id_final))
+df_final <- FD_df_after_all_exclusions # %>%
+  # arrange(factor(FD_df_after_all_exclusions$AP_id, levels = id_final))
 
 
 #### histograms AFTER FD and missing region subjects exclusions (limits require manual adjustment)  ####

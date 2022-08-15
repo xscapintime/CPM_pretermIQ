@@ -32,20 +32,27 @@ plot.path = "./plots/"
 # stats <- read_excel("../data/ePrime_BIPP_master_file_GEORGE_LHv4 correct tmcq.xlsx")
 
 ## updated sheets
-id <-  read_excel("../data/LH scanning database AP EAP BIPP.xlsx", sheet = "AP and BIPP QC_final", skip = 5)
-id <- id$AP_ID[grepl("AP|BIPP", id$AP_ID)]
+## can add vars later
+# id <-  read_excel("../data/LH scanning database AP EAP BIPP.xlsx", sheet = "AP and BIPP QC_final", skip = 5)
+# id <- id$AP_ID[grepl("AP|BIPP", id$AP_ID)]
 
-stats <- read_excel("../data/AP_marking_JULY 2022.xlsx", sheet = "Master", skip=1)
+# stats <- read_excel("../data/AP_marking_JULY 2022.xlsx", sheet = "Master", skip=1)
 
-stats <- stats %>% filter(AP_ID %in% id)
+# stats <- stats %>% filter(AP_ID %in% id)
 
+
+
+#### framewise displacement - get from fmriprep .tsv file ####
+fd.path = "../data/framwise_displacement/"
+
+## get id
+files <- list.files(fd.path, pattern = "_framwise_displacement.tsv")
+id <- sub("sub-", "", files) %>% sub("_framwise_displacement.tsv", "", .)
 
 #### set nt and ns ####
 nt = 400 #number of time series
 ns = length(id) #number of subjects
 
-#### framewise displacement - get from fmriprep .tsv file ####
-fd.path = "../data/framwise_displacement/"
 
 fd <- matrix(NA, nrow=nt-1, ncol=ns)
 for (i in 1:ns) {
@@ -69,8 +76,9 @@ dim(fd)
 #}
 fd.m = colMeans(fd)   # mean fd for each subject
 fd.max = colMaxs(fd)  # max fd
-ns = dim(fd)[2] # number of subjects
-nt = dim(fd)[1] + 1 ## 400 in this case
+
+# ns = dim(fd)[2] # number of subjects
+# nt = dim(fd)[1] + 1 ## 400 in this case
 
 
 #### histograms before FD exclusions (limits require manual adjustment) ####
@@ -92,22 +100,25 @@ dev.off()
 
 #### exclude FD max and means beyond cut-off ####
 #find Ids and exclude.. 
-FD_df <- stats %>% select(AP_id, sex, group, ga, birth_weight, bayley22_language_comp, parca22_language,AP_id,
-                    wppsi4_verb_compr_raw, wisc8_vci_cs) %>%
-                    cbind(., fd.m, fd.max)
+# add vars later
+# FD_df <- stats %>% select(AP_id, sex, group, ga, birth_weight, bayley22_language_comp, parca22_language,AP_id,
+#                     wppsi4_verb_compr_raw, wisc8_vci_cs) %>%
+#                     cbind(., fd.m, fd.max)
 # rownames(FD_df) <- FD_df$AP_id
 
+FD_df <- cbind(fd.m, fd.max) %>% as.data.frame()
+
 toexclu <- unique(c(which(fd.m >= mean_cutoff), which(fd.max >= max_cutoff)))
+toexclu                       
+# [1] 10 23
 
 #so now we exlclude IDs
-#we exlclude 10 IDs - fd exclusions
-fd_exclusions <- toexclu
-# FD_df[fd_exclusions,]
-
+#we exlclude 2 IDs - fd exclusions
 
 #### data frame after FD
-FD_df_after_exclusions <- FD_df[-fd_exclusions,]
-
+FD_df_after_exclusions <- FD_df[-toexclu,]
+dim(FD_df_after_exclusions)
+# [1] 105   2
 
 #### histograms AFTER FD exclusions (limits require manual adjustment) ####
 # mean fd

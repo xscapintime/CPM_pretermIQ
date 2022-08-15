@@ -31,17 +31,22 @@ load("df_final.RData")
 
 
 # create fc
-nroi.f = dim(ts.final)[2]  #new number of rois -previous nroi (initial) = nroi
-ns.f = dim(ts.final)[3]
+nroi.f = dim(ts.final)[2]  ## 374, regions #new number of rois -previous nroi (initial) = nroi
+ns.f = dim(ts.final)[3] ## 103, subjects
 
 fc.raw = array(NA,dim=c(nroi.f,nroi.f,ns.f))  # raw FC - before fisher transformation
 for (i in 1:ns.f) {
   if (i%%10==0) print(i)
   fc.raw[,,i] = cor(ts.final[,,i])
 }
+dim(fc.raw)
+# [1] 374 374 103
 
 # fisher transform correlations
 fc = fisherz(fc.raw)
+dim(fc)
+# [1] 374 374 103
+
 
 ## save as individual matrices for python CPM
 # diagonals can't be NA
@@ -54,6 +59,7 @@ for (i in 1:ns.f) {
   write.table(fc[,,i], file = paste0("../data/fc_individual/", df_final$AP_id[i], ".fc.txt"), sep = " ",
               quote = F, row.names = F, col.names = F)
 }
+
 
 ## for in R
 # set matrix diagonals to NaN

@@ -1,4 +1,5 @@
 #### THIS IS FOR LATER: mean signal intensities ####
+### === no need for this for now === ###
 setwd("/mnt/d/PROJECTS/preterm_language/qc")
 
 library(dplyr)
@@ -26,7 +27,6 @@ plot.path = "./plots/"
 ### n of regions, ts, subjects...
 nroi <- 376 # number of regions
 ns_no_NA <- length(id_clean_FD_clean_ts)
-
 
 
 
