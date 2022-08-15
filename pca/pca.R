@@ -9,21 +9,9 @@ library(psych)
 
 
 ## Load table
-tb1 <- read_excel("../data/AP_marking_JULY 2022.xlsx", sheet = "Master")
-tb1 <- tb1[-1, ]
-tb2 <- read_excel("../data/ePrime_BIPP_master_file_GEORGE_LHv4 correct tmcq.xlsx")
-tb3 <- read_excel("../data/mchat_at22m_EP_ids.xlsx")
-
-
-## merge
-tmp <- merge(tb1, tb2, by.x = "AP_ID", by.y = "AP_id")
-tb_merge <- merge(tmp, tb3, by.x = "Eprime_ID", by.y = "id")
-
-
-## filter
-# -999 and -998
-tb_merge[tb_merge == -999] <- NA
-tb_merge[tb_merge == -998] <- NA
+# from final version of vars
+dat_fin <- read.csv("../data/id_vars_fin.csv")
+row.names(dat_fin) <- dat_fin$AP_ID
 
 # column as variables
 vars <- c("WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-rrb", "srs-sci",
