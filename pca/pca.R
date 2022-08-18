@@ -11,20 +11,22 @@ library(psych)
 ## Load table
 # from final version of vars
 dat_fin <- read.csv("../data/id_vars_fin.csv")
+dat_fin <- dat_fin %>% filter(!is.na(AP_ID))
 row.names(dat_fin) <- dat_fin$AP_ID
 
 # column as variables
-vars <- c("WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-rrb", "srs-sci",
-        "bayley22_cog_comp", "bayley22_language_comp", "bayley22_motor_comp", "parca22_cognitive", "parca22_language",
-        "wppsi4_verb_compr_raw", "wppsi4_visuo_sp_raw", "wppsi4_fluid_res_raw", "wppsi4_working_mem_raw", "wppsi4_proc_speed_raw", "srs4_rrb_raw", "srs4_sci_raw",
-        "MC_COUNT_TOTAL_FAILS_nooffails")
+# vars <- c("WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-rrb", "srs-sci",
+#         "bayley22_cog_comp", "bayley22_language_comp", "bayley22_motor_comp", "parca22_cognitive", "parca22_language",
+#         "wppsi4_verb_compr_raw", "wppsi4_visuo_sp_raw", "wppsi4_fluid_res_raw", "wppsi4_working_mem_raw", "wppsi4_proc_speed_raw", "srs4_rrb_raw", "srs4_sci_raw",
+#         "MC_COUNT_TOTAL_FAILS_nooffails")
 
-dat <- tb_merge[,vars]
+dat <- dat_fin[,-c(1:7)]
 
 
 ## PCA
 dat <- sapply(dat, as.numeric)
-res <- prcomp(na.omit(dat), center = T, scale = T) ##?
+row.names(dat) <- row.names(dat_fin)
+res <- prcomp(na.omit(dat), center = T, scale = T) ## no NA allowed, 89 subjects left
 
 summary(res)
 
@@ -53,6 +55,9 @@ sign.pc<-function(x,R=5000,s=10, cor=T,...){
 
 pca_sign <- sign.pc(as.data.frame(scale(na.omit(dat), center=T, scale=T)),cor=T)
 pca_sign # the first two PCs are significant
+
+# export PCs
+write.csv(res$x, file = "../data/var19_pca.csv", quote = F)
 
 
 ## p-val
