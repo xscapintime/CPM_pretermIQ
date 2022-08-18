@@ -84,7 +84,7 @@ dup_clean <- dat %>% filter(Eprime_ID %in% dup_ep) %>% group_by(Eprime_ID) %>%  
     .collate = "rows") %>% distinct() %>% relocate(Eprime_ID, .after = AP_ID)
 
 # remove and bind
-dat_fin <- rbind(dat %>% filter(!Eprime_ID %in% dup_ep), dup_clean) %>% arrange(AP_ID, Eprime_ID)
+dat_fin <- rbind(dat %>% filter(!Eprime_ID %in% dup_ep & !AP_ID %in% dup_ap), dup_clean) %>% arrange(AP_ID, Eprime_ID)
 
 # sex to 1=m, 2=f
 dat_fin$sex <- ifelse(dat_fin$sex == "Male", 1, 2)
