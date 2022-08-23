@@ -1,3 +1,5 @@
+#### based on https://github.com/esfinn/cpm_tutorial
+
 import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
@@ -7,6 +9,7 @@ import seaborn as sns
 from pathlib import Path
 import os
 import warnings
+from nilearn.plotting import plot_connectome
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
@@ -60,7 +63,7 @@ def read_in_matrices(subj_list, file_suffix=None, data_dir=data_dir, zscore=Fals
 
 # CPM functions
 
-# sampling
+# sampling, about 9:1 train:test
 def mk_kfold_indices(subj_list, k = 10):
     """
     Splits list of subjects into k folds for cross-validation.
@@ -117,7 +120,38 @@ def get_train_test_data(all_fc_data, train_subs, test_subs, behav_data, behav):
 
 
 
-def select_features(train_vcts, train_behav, r_thresh=0.2, corr_type='pearson', verbose=False):
+# def select_features(train_vcts, train_behav, r_thresh=0.2, corr_type='pearson', verbose=False):
+    
+#     """
+#     Runs the CPM feature selection step: 
+#     - correlates each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
+#     """
+
+#     assert train_vcts.index.equals(train_behav.index), "Row indices of FC vcts and behavior don't match!"
+
+#     # Correlate all edges with behav vector
+#     if corr_type =='pearson':
+#         cov = np.dot(train_behav.T - train_behav.mean(), train_vcts - train_vcts.mean(axis=0)) / (train_behav.shape[0]-1)
+#         corr = cov / np.sqrt(np.var(train_behav, ddof=1) * np.var(train_vcts, axis=0, ddof=1))
+#     elif corr_type =='spearman':
+#         corr = []
+#         for edge in train_vcts.columns:
+#             r_val = sp.stats.spearmanr(train_vcts.loc[:,edge], train_behav)[0]
+#             corr.append(r_val)
+
+#     # Define positive and negative masks
+#     mask_dict = {}
+#     mask_dict["pos"] = corr > r_thresh
+#     mask_dict["neg"] = corr < -r_thresh
+    
+#     if verbose:
+#         print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
+
+#     return mask_dict, corr
+
+
+### feature selection func with p-val ###
+def select_features(train_vcts, train_behav, p_thresh=0.01, corr_type='pearson', verbose=False):
     
     """
     Runs the CPM feature selection step: 
@@ -128,23 +162,42 @@ def select_features(train_vcts, train_behav, r_thresh=0.2, corr_type='pearson', 
 
     # Correlate all edges with behav vector
     if corr_type =='pearson':
-        cov = np.dot(train_behav.T - train_behav.mean(), train_vcts - train_vcts.mean(axis=0)) / (train_behav.shape[0]-1)
-        corr = cov / np.sqrt(np.var(train_behav, ddof=1) * np.var(train_vcts, axis=0, ddof=1))
+        # cov = np.dot(train_behav.T - train_behav.mean(), train_vcts - train_vcts.mean(axis=0)) / (train_behav.shape[0]-1)
+        # corr = cov / np.sqrt(np.var(train_behav, ddof=1) * np.var(train_vcts, axis=0, ddof=1))
+        corr = []
+        pval = []
+        for edge in train_vcts.columns:
+            r_val = sp.stats.pearsonr(train_vcts.loc[:,edge], train_behav)[0]
+            p_val = sp.stats.pearsonr(train_vcts.loc[:,edge], train_behav)[1]
+            corr.append(r_val)
+            pval.append(p_val)
+        stat = pd.DataFrame({'corr': corr, 'pval': pval})
+
+
     elif corr_type =='spearman':
         corr = []
+        pval = []
         for edge in train_vcts.columns:
             r_val = sp.stats.spearmanr(train_vcts.loc[:,edge], train_behav)[0]
+            p_val = sp.stats.spearmanr(train_vcts.loc[:,edge], train_behav)[1]
             corr.append(r_val)
+            pval.append(p_val)
+        stat = pd.DataFrame({'corr': corr, 'pval': pval})
+
 
     # Define positive and negative masks
     mask_dict = {}
-    mask_dict["pos"] = corr > r_thresh
-    mask_dict["neg"] = corr < -r_thresh
+    # mask_dict["pos"] = corr > r_thresh
+    # mask_dict["neg"] = corr < -r_thresh
     
+    mask_dict["pos"] = (stat['pval'] < p_thresh) & (stat['corr'] > 0)
+    mask_dict["pos"] = (stat['pval'] < p_thresh) & (stat['corr'] < 0)
+
+
     if verbose:
         print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
 
-    return mask_dict
+    return mask_dict, corr, pval
 
 
 
@@ -228,7 +281,7 @@ def cpm_wrapper(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
         print("doing fold {}".format(fold))
         train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
         train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
-        mask_dict = select_features(train_vcts, train_behav, **cpm_kwargs)
+        mask_dict, corr, pval = select_features(train_vcts, train_behav, **cpm_kwargs)
         all_masks["pos"][fold,:] = mask_dict["pos"]
         all_masks["neg"][fold,:] = mask_dict["neg"]
         model_dict = build_model(train_vcts, mask_dict, train_behav)
@@ -238,7 +291,7 @@ def cpm_wrapper(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
             
     behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
     
-    return behav_obs_pred, all_masks
+    return behav_obs_pred, all_masks, mask_dict, corr, pval # to see the selected features
 
 
 # plot
@@ -268,17 +321,21 @@ def plot_predictions(behav_obs_pred, tail="glm"):
     return g
 
 
-# def plot_consistent_edges(all_masks, tail, thresh = 1., color='gray'):
+## visualize edges
+# default shen 268
+shen268_coords = pd.read_csv("../data/coords/shen268_coords.csv", index_col="NodeNo")
+
+def plot_consistent_edges(all_masks, tail, thresh = 1., color='gray', node_coords=shen268_coords):
     
-#     edge_frac = (all_masks[tail].sum(axis=0))/(all_masks[tail].shape[0])
-#     print("For the {} tail, {} edges were selected in at least {}% of folds".format(tail, (edge_frac>=thresh).sum(), thresh*100))
-#     edge_frac_square = sp.spatial.distance.squareform(edge_frac)
+    edge_frac = (all_masks[tail].sum(axis=0))/(all_masks[tail].shape[0])
+    print("For the {} tail, {} edges were selected in at least {}% of folds".format(tail, (edge_frac>=thresh).sum(), thresh*100))
+    edge_frac_square = sp.spatial.distance.squareform(edge_frac)
 
-#     node_mask = np.amax(edge_frac_square, axis=0) >= thresh # find nodes that have at least one edge that passes the threshold
-#     node_size = edge_frac_square.sum(axis=0)*node_mask*20 # size nodes based on how many suprathreshold edges they have
+    node_mask = np.amax(edge_frac_square, axis=0) >= thresh # find nodes that have at least one edge that passes the threshold
+    node_size = edge_frac_square.sum(axis=0)*node_mask*20 # size nodes based on how many suprathreshold edges they have
 
-#     plot_connectome(adjacency_matrix=edge_frac_square, edge_threshold=thresh,
-#                     node_color = color,
-#                     node_coords=shen268_coords, node_size=node_size,
-#                     display_mode= 'lzry',
-#                     edge_kwargs={"linewidth": 1, 'color': color})
+    plot_connectome(adjacency_matrix=edge_frac_square, edge_threshold=thresh,
+                    node_color = color,
+                    node_coords=node_coords, node_size=node_size, ## need define coords first
+                    display_mode= 'lzry',
+                    edge_kwargs={"linewidth": 1, 'color': color})
