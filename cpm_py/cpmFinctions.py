@@ -151,7 +151,7 @@ def get_train_test_data(all_fc_data, train_subs, test_subs, behav_data, behav):
 
 
 ### feature selection func with p-val ###
-def select_features(train_vcts, train_behav, p_thresh=0.01, corr_type='pearson', verbose=False):
+def select_features_pval(train_vcts, train_behav, p_thresh=0.01, corr_type='pearson', verbose=False):
     
     """
     Runs the CPM feature selection step: 
@@ -191,7 +191,7 @@ def select_features(train_vcts, train_behav, p_thresh=0.01, corr_type='pearson',
     # mask_dict["neg"] = corr < -r_thresh
     
     mask_dict["pos"] = (stat['pval'] < p_thresh) & (stat['corr'] > 0)
-    mask_dict["pos"] = (stat['pval'] < p_thresh) & (stat['corr'] < 0)
+    mask_dict["neg"] = (stat['pval'] < p_thresh) & (stat['corr'] < 0)
 
 
     if verbose:
@@ -281,7 +281,7 @@ def cpm_wrapper(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
         print("doing fold {}".format(fold))
         train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
         train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
-        mask_dict, corr, pval = select_features(train_vcts, train_behav, **cpm_kwargs)
+        mask_dict, corr, pval = select_features_pval(train_vcts, train_behav, **cpm_kwargs)
         all_masks["pos"][fold,:] = mask_dict["pos"]
         all_masks["neg"][fold,:] = mask_dict["neg"]
         model_dict = build_model(train_vcts, mask_dict, train_behav)
@@ -314,18 +314,19 @@ def plot_predictions(behav_obs_pred, tail="glm"):
     g.set_aspect('equal', adjustable='box')
     
     r = sp.stats.pearsonr(x,y)[0]
-    p = sp.stats.pearsonr(x,y)[1]
+    # p = sp.stats.pearsonr(x,y)[1] ## parametric p-value, not correct to use
     g.annotate('r = {0:.2f}'.format(r), xy = (0.7, 0.1), xycoords = 'axes fraction')
-    g.annotate('p = {0:.2f}'.format(p), xy = (0.7, 0.05), xycoords = 'axes fraction')
+    # g.annotate('p = {0:.2f}'.format(p), xy = (0.7, 0.05), xycoords = 'axes fraction') ##
     
     return g
 
 
 ## visualize edges
 # default shen 268
-shen268_coords = pd.read_csv("../data/coords/shen268_coords.csv", index_col="NodeNo")
+# shen268_coords = pd.read_csv("../data/coords/shen268_coords.csv", index_col="NodeNo")
+coords = pd.read_csv("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", index_col=None, header=None, sep=" ")
 
-def plot_consistent_edges(all_masks, tail, thresh = 1., color='gray', node_coords=shen268_coords):
+def plot_consistent_edges(all_masks, tail, thresh = 1., color='gray', node_coords=coords):
     
     edge_frac = (all_masks[tail].sum(axis=0))/(all_masks[tail].shape[0])
     print("For the {} tail, {} edges were selected in at least {}% of folds".format(tail, (edge_frac>=thresh).sum(), thresh*100))

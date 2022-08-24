@@ -2,6 +2,8 @@ import os, glob
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import scipy as sp
+import statistics
 from matplotlib import pyplot as plt
 from cpmFinctions import *
 
@@ -69,7 +71,14 @@ plt.close()
 
 
 # paras for CPM
-cpm_kwargs = {'r_thresh': 0.3, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+# cpm_kwargs = {'r_thresh': 0.3, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+# np.random.seed(202208)
+cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+
+## viz edges
+coords = pd.read_csv("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", index_col=None, header=None, sep=" ")
+print(coords.shape)
+
 
 # pred vs obs scatter
 # all vars, don't need this, use PCs
@@ -81,20 +90,29 @@ cpm_kwargs = {'r_thresh': 0.3, 'corr_type': 'pearson', 'verbose': False} ## use 
 #     plt.savefig(os.path.join('models', behav + '_model.png'))
 #     plt.close()
 
+
+# plots, would be one of the random cases
 for behav in all_pca_data.columns[:2]:
     print(behav)
-    behav_obs_pred, all_masks, mask_dict, corr = cpm_wrapper(fc_data, all_pca_data, behav=behav, **cpm_kwargs)
-    g = plot_predictions(behav_obs_pred) 
+
+    behav_obs_pred, all_masks, mask_dict, corr, pval = cpm_wrapper(fc_data, all_pca_data, behav=behav, **cpm_kwargs)
+    ## count selected edges
+    print('Selected pos edges: %' + '{:.2f}'.format(sum(mask_dict['pos'])/len(mask_dict['pos']) * 100))
+    print('Selected neg edges: %' + '{:.2f}'.format(sum(mask_dict['neg'])/len(mask_dict['neg']) * 100))
+    
+    ## plot pred vs obs
+    g = plot_predictions(behav_obs_pred)
     g.figure.tight_layout()
     plt.savefig(os.path.join('models', behav + '_model.png'))
     plt.close()
+    
+    ## plot edges
+    g = plot_consistent_edges(all_masks, "pos", thresh = 1, color = 'red', node_coords = coords)
+    plt.savefig(os.path.join('edges', behav + '_pos_edges.png'))
+    plt.close()
+    g = plot_consistent_edges(all_masks, "neg", thresh = 1, color = 'blue', node_coords = coords)
+    plt.savefig(os.path.join('edges', behav + '_neg_edges.png'))
+    plt.close()
+
 
 #### non-correlated and non-sig, few subjects = 51 ####
-
-
-## viz edges
-coords = pd.read_csv("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", index_col=None, header=None, sep=" ")
-print(coords.shape)
-
-plot_consistent_edges(all_masks, "pos", thresh = 0.8, color = 'red', node_coords = coords)
-plot_consistent_edges(all_masks, "neg", thresh = 0.8, color = 'blue', node_coords = coords)
