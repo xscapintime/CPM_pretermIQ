@@ -72,7 +72,7 @@ plt.close()
 
 # paras for CPM
 # cpm_kwargs = {'r_thresh': 0.3, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
-# np.random.seed(202208)
+# perc_thresh=1 for top edges selection
 cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
 
 ## viz edges

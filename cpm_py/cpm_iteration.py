@@ -91,10 +91,10 @@ for behav in all_pca_data.columns[:2]:
     print('Mode of rvals: ' + '{:.2f}'.format(statistics.mode(rval)))
 
     ## histogram
-    g = sns.displot(rval, kde=True)
-    plt.title('r-vals of Pred vs Obs of edges correlated to ' + behav + '\n  Iter=' + '{:.0f}'.format(iters) + ', mode=' + '{:.2f}'.format(statistics.mode(rval)))
-    plt.savefig(os.path.join('dist', behav + '_{:.0f}'.format(iters) + '_rvals_dist.png'))
-    plt.close()
+    # g = sns.displot(rval, kde=True)
+    # plt.title('r-vals of Pred vs Obs of edges correlated to ' + behav + '\n  Iter=' + '{:.0f}'.format(iters) + ', mode=' + '{:.2f}'.format(statistics.mode(rval)))
+    # plt.savefig(os.path.join('dist', behav + '_{:.0f}'.format(iters) + '_rvals_dist.png'))
+    # plt.close()
 
     ## export r-vals, sort p-vals later # list to txt, line by line
     fn = behav + '_predvsobs_rvals' + '_iter{:.0f}'.format(iters) + '.txt'
