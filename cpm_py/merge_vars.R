@@ -49,7 +49,7 @@ tb_merge[tb_merge == -998] <- NA
 
 
 vars <- c("AP_ID", "Eprime_ID", "group", "sex", "age22", "age4", "age8",
-        "WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-rrb", "srs-sci",
+        "WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-rrb", "srs-sci", ## AP_marking_JULY, 8 yo
         "bayley22_cog_comp", "bayley22_language_comp", "bayley22_motor_comp", "parca22_cognitive", "parca22_language",
         "wppsi4_verb_compr_raw", "wppsi4_visuo_sp_raw", "wppsi4_fluid_res_raw", "wppsi4_working_mem_raw", "wppsi4_proc_speed_raw", "srs4_rrb_raw", "srs4_sci_raw",
         "MC_COUNT_TOTAL_FAILS_nooffails")

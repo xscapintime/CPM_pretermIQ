@@ -11,7 +11,7 @@ from cpmFinctions import *
 ## check FC file names
 path = '../data/fc_individual/'
 file = glob.glob(os.path.join(path,'*.txt'))
-file
+# file
 
 # get subject id
 subj_list = [ os.path.split(f)[1].replace('.fc.txt', '') for f in file ]
@@ -36,15 +36,16 @@ all_pca_data = pd.read_csv('../data/var19_pca.csv', index_col=0)
 all_pca_data.dtypes
 
 # filter
-all_pca_data = all_pca_data[all_pca_data.index.isin(subj_list)]
-print(all_pca_data.shape)
+pca_data = all_pca_data[all_pca_data.index.isin(subj_list)]
+print(pca_data.shape)
 
 
 ## CPM
 # read in FC matrices
-condition = 'fc' ## actually no need, should be like REST or EMO
+condition = 'fc' ## actually no need, should be something like REST or EMO to distinguish different matrices
 all_fc_data = read_in_matrices(subj_list, file_suffix=condition, data_dir=Path(path))
-fc_data = all_fc_data.loc[behav_data.index]
+fc_data = all_fc_data.loc[pca_data.index]
+print(fc_data.shape) # edge number = n_nodes*(n_nodes-1)/2, 69751 in this case
 
 
 # heatmap, check FC of every subject, not necessary
@@ -65,15 +66,15 @@ plt.savefig(os.path.join('dist', 'var19_pairdist.pdf'))
 plt.close()
 
 plt.figure(figsize = (5,5))
-p = sns.pairplot(all_pca_data.iloc[:,:2], kind ='scatter')
+p = sns.pairplot(pca_data.iloc[:,:2], kind ='scatter')
 plt.savefig(os.path.join('dist', 'pcs2_pairdist.pdf'))
 plt.close()
 
 
 # paras for CPM
-# cpm_kwargs = {'r_thresh': 0.3, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+cpm_kwargs = {'r_thresh': 0.38, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
 # perc_thresh=1 for top edges selection
-cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+# cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
 
 ## viz edges
 coords = pd.read_csv("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", index_col=None, header=None, sep=" ")
@@ -92,13 +93,13 @@ print(coords.shape)
 
 
 # plots, would be one of the random cases
-for behav in all_pca_data.columns[:2]:
+for behav in pca_data.columns[:2]:
     print(behav)
 
-    behav_obs_pred, all_masks, mask_dict, corr, pval = cpm_wrapper(fc_data, all_pca_data, behav=behav, **cpm_kwargs)
+    behav_obs_pred, all_masks, corr = cpm_wrapper(fc_data, pca_data, behav=behav, **cpm_kwargs)
     ## count selected edges
-    print('Selected pos edges: %' + '{:.2f}'.format(sum(mask_dict['pos'])/len(mask_dict['pos']) * 100))
-    print('Selected neg edges: %' + '{:.2f}'.format(sum(mask_dict['neg'])/len(mask_dict['neg']) * 100))
+    print('{:.2f} pos edges passed all folds: '.format(((all_masks['pos'].sum(axis=0)/10) >= 1).sum()))
+    print('{:.2f} neg edges passed all folds: '.format(((all_masks['neg'].sum(axis=0)/10) >= 1).sum()))
     
     ## plot pred vs obs
     g = plot_predictions(behav_obs_pred)
@@ -107,6 +108,7 @@ for behav in all_pca_data.columns[:2]:
     plt.close()
     
     ## plot edges
+    # all_masks(pos/neg matrices) is a binary array, k fold * n total edges, in this case is 10,69751
     g = plot_consistent_edges(all_masks, "pos", thresh = 1, color = 'red', node_coords = coords)
     plt.savefig(os.path.join('edges', behav + '_pos_edges.png'))
     plt.close()
