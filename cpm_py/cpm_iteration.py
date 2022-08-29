@@ -94,7 +94,9 @@ for behav in pca_data.columns[:2]:
     print('Mode of rvals: ' + '{:.2f}'.format(statistics.mode(rval)))
 
     # histogram
+    plt.figure(figsize = (5,6))
     g = sns.displot(rval, kde=True)
+    plt.subplots_adjust(top=0.85)
     plt.title('r-vals of Pred vs Obs of edges correlated to ' + behav + '\n  Iter={:.0f}, mode={:.2f}'.format(iters, statistics.mode(rval)))
     plt.savefig(os.path.join('dist', behav + '_{:.0f}_rvals_dist.png'.format(iters)))
     plt.close()
