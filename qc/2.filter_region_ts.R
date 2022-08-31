@@ -179,4 +179,5 @@ dev.off()
 ## save obejct for later scripts
 save(ts.final, file = "ts.final.RData")
 save(df_final, file = "df_final.RData")
+write.table(df_final, "../data/fd_mean_max.txt", quote = F)
 save.image("2.filter_region_ts.RData")
