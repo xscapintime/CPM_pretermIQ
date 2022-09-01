@@ -80,9 +80,34 @@ def mk_kfold_indices(subj_list, k = 10):
 
     assert len(indices)==n_subs, "Length of indices list does not equal number of subjects, something went wrong"
 
-    np.random.shuffle(indices) # shuffles in place
+    np.random.shuffle(indices) # generator, shuffles in place
 
     return np.array(indices)
+
+
+# fix the sampling by using seed
+def mk_kfold_indices_seed(subj_list, k = 10, seed = 202208):
+    """
+    Splits list of subjects into k folds for cross-validation.
+    """
+    
+    n_subs = len(subj_list)
+    n_subs_per_fold = n_subs//k # floor integer for n_subs_per_fold
+
+    indices = [[fold_no]*n_subs_per_fold for fold_no in range(k)] # generate repmat list of indices
+    remainder = n_subs % k # figure out how many subs are left over
+    remainder_inds = list(range(remainder))
+    indices = [item for sublist in indices for item in sublist]    ## list comprehension
+    [indices.append(ind) for ind in remainder_inds] # add indices for remainder subs
+
+    assert len(indices)==n_subs, "Length of indices list does not equal number of subjects, something went wrong"
+
+    np.random.seed(seed)
+    indices = np.random.permutation(indices)
+    # indices = np.random.shuffle(indices) # shuffles in place
+
+    return np.array(indices)
+
 
 
 def split_train_test(subj_list, indices, test_fold):
@@ -138,6 +163,7 @@ def select_features(train_vcts, train_behav, r_thresh=0.2, corr_type='pearson', 
         for edge in train_vcts.columns:
             r_val = sp.stats.spearmanr(train_vcts.loc[:,edge], train_behav)[0]
             corr.append(r_val)
+        corr = np.array(corr) # list bug
 
     # Define positive and negative masks
     mask_dict = {}
@@ -426,6 +452,46 @@ def cpm_wrapper_alt(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
     behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
     
     return behav_obs_pred, all_masks, corr, pval # to see the selected features
+
+
+## samping with seed
+def cpm_wrapper_seed(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cpm_kwargs):
+    
+    assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
+
+    subj_list = all_fc_data.index # get subj_list from df index
+    
+    indices = mk_kfold_indices_seed(subj_list, k=k, seed=seed)
+    
+    # Initialize df for storing observed and predicted behavior
+    col_list = []
+    for tail in ["pos", "neg", "glm"]:
+        col_list.append(behav + " predicted (" + tail + ")")
+    col_list.append(behav + " observed")
+    behav_obs_pred = pd.DataFrame(index=subj_list, columns = col_list)
+    
+    # Initialize array for storing feature masks
+    n_edges = all_fc_data.shape[1]
+    all_masks = {}
+    all_masks["pos"] = np.zeros((k, n_edges))
+    all_masks["neg"] = np.zeros((k, n_edges))
+    
+    for fold in range(k):
+        print("doing fold {}".format(fold))
+        train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
+        train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
+        mask_dict, corr = select_features(train_vcts, train_behav, **cpm_kwargs)
+        all_masks["pos"][fold,:] = mask_dict["pos"]
+        all_masks["neg"][fold,:] = mask_dict["neg"]
+        model_dict = build_model(train_vcts, mask_dict, train_behav)
+        behav_pred = apply_model(test_vcts, mask_dict, model_dict)
+        for tail, predictions in behav_pred.items():
+            behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
+            
+    behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
+    
+    return behav_obs_pred, all_masks, corr
+
 
 
 
