@@ -105,7 +105,7 @@ for (i in 1:ns_no_NA) {
 #### regions 136 (left hippocampus), and 316 (right hippocampus) ####
 ts_no_NA_regions_noHipp <- ts_no_NA_regions[,-c(136, 316),] #exclude the glasser hippocampus regions
 dim(ts_no_NA_regions_noHipp)              
-# [1] 400 374 101
+# [1] 400 374 90
 
 #now, for those with regions missing, we will exclude them completely (n=3),
 #those with a hippocampus region missing, we will keep them, (n=4)
@@ -142,8 +142,8 @@ ts_hippNAs_2 <- ts_hippNAs[,-c(135), c(2)]  #exclude left (136) -  right (316) a
 library(abind)
 ts.final <- abind(ts_hippNAs_1, ts_hippNAs_2, ts_no_NA_regions_noHipp)
 ts.final %>% dim
-# [1] 400 374  103
-## regions:376-2, subjects:107-2-4+2
+# [1] 400 374  92
+## regions:376-2, subjects:94-4+2
 
 #### create final df ####
 id_final <- unlist(list(id_with_hippNAs_ts[1], id_with_hippNAs_ts[2],
@@ -152,7 +152,7 @@ id_final <- unlist(list(id_with_hippNAs_ts[1], id_with_hippNAs_ts[2],
 #df_final in the correct ID order as the ts_final:
 FD_df_after_all_exclusions <- FD_df_after_exclusions[-which(id_clean_FD %in% c("AP068", "AP078")),] #final inclusions but wrong order
 dim(FD_df_after_all_exclusions)
-# [1] 103 2
+# [1] 92 2
 
 df_final <- FD_df_after_all_exclusions # %>%
   # arrange(factor(FD_df_after_all_exclusions$AP_id, levels = id_final))
@@ -160,7 +160,7 @@ df_final <- FD_df_after_all_exclusions # %>%
 
 #### histograms AFTER FD and missing region subjects exclusions (limits require manual adjustment)  ####
 # mean fd
-mean_cutoff <- 0.15
+mean_cutoff <- 0.11
 pdf(paste0(plot.path,"hist_mean_fd_after_FD_", mean_cutoff ,"co_exclusion_FINAL.pdf"),width=6,height=5)
 par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.main = 1, bg='white')
 hist(df_final$fd.m,30, xlab=expression(paste(mu, ' FD (mm)',sep='')), ylab='frequency',main='',col='grey90',xlim=c(0,0.15))
@@ -168,7 +168,7 @@ abline(v=mean_cutoff,lty=2,col='grey') #lines for cutoffs - for exclusion
 dev.off()
 
 # max fd
-max_cutoff <- 1
+max_cutoff <- 0.6
 pdf(paste0(plot.path,"hist_max_fd_after_FD_", max_cutoff ,"co_exclusion_FINAL.pdf"),width=6,height=5)
 par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.main = 1, bg='white')
 hist(df_final$fd.max,30, xlab=expression(paste('max FD (mm)',sep='')), ylab='frequency',main='',col='grey90',xlim=c(0,1))

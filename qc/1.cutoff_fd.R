@@ -27,6 +27,12 @@ source("rp.main.R")
 plot.path = "./plots/"
 
 # #### demographic information - age, sex etc. (as vectors of length ns) ####
+#### merged var from differnet spreadsheets ####
+stats <- read.csv("../data/id_vars_fin.csv")
+stats <- stats[!is.na(stats$AP_ID),]
+row.names(stats) <- stats$AP_ID
+
+
 # ID list
 # id <- read_excel("../data/For Liyang - IDs resting state preprocessed.xlsx") ## AP ID
 # stats <- read_excel("../data/ePrime_BIPP_master_file_GEORGE_LHv4 correct tmcq.xlsx")
@@ -74,8 +80,9 @@ dim(fd)
 #for (i in 1:ns) {
 #  fd[,i] = rowSums(abs(diff(mot[,4:6,i])))+(50*(pi/180))*rowSums(abs(diff(mot[,1:3,i])))
 #}
-fd.m = colMeans(fd)   # mean fd for each subject
-fd.max = colMaxs(fd)  # max fd
+fd.m <- colMeans(fd)   # mean fd for each subject
+fd.max <- colMaxs(fd)  # max fd
+names(fd.max) <- colnames(fd)
 
 # ns = dim(fd)[2] # number of subjects
 # nt = dim(fd)[1] + 1 ## 400 in this case
@@ -83,7 +90,7 @@ fd.max = colMaxs(fd)  # max fd
 
 #### histograms before FD exclusions (limits require manual adjustment) ####
 # mean fd
-mean_cutoff <- 0.15
+mean_cutoff <- 0.11
 pdf(paste0(plot.path,"hist_mean_fd_cutoff_", mean_cutoff, ".pdf"),width=6,height=5)
 par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.main = 1, bg="white")
 hist(fd.m,30, xlab=expression(paste(mu, " FD (mm)",sep="")), ylab="frequency",main="",col="grey90",xlim=c(0,0.2))
@@ -91,7 +98,7 @@ abline(v=mean_cutoff,lty=2,col="grey") #lines for cutoffs - for exclusion
 dev.off()
 
 # max fd
-max_cutoff <- 1
+max_cutoff <- 0.6
 pdf(paste0(plot.path,"hist_max_fd_cutoff_",max_cutoff, ".pdf"),width=6,height=5)
 par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.main = 1, bg="white")
 hist(fd.max,30, xlab=expression(paste("max FD (mm)",sep="")), ylab="frequency",main="",col="grey90",xlim=c(0,1.5))
@@ -118,7 +125,7 @@ toexclu
 #### data frame after FD
 FD_df_after_exclusions <- FD_df[-toexclu,]
 dim(FD_df_after_exclusions)
-# [1] 105   2
+# [1] 94   2
 
 #### histograms AFTER FD exclusions (limits require manual adjustment) ####
 # mean fd
@@ -134,6 +141,11 @@ par(mar=c(5, 5, 3, 1) + 0.1, cex.lab = 2, cex.axis = 1.5, cex.main = 2, font.mai
 hist(FD_df_after_exclusions$fd.max,30, xlab=expression(paste("max FD (mm)",sep="")), ylab="frequency",main="",col="grey90",xlim=c(0,1))
 abline(v=max_cutoff, lty=2,col="grey") #lines for cutoffs - for exclusion 
 dev.off()
+
+
+FD_df_after_exclusions <- merge(stats, FD_df_after_exclusions, by = 0 )
+row.names(FD_df_after_exclusions) <- FD_df_after_exclusions$AP_ID
+FD_df_after_exclusions <- FD_df_after_exclusions[, -1]
 
 
 ## save 
