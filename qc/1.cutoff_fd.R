@@ -31,6 +31,8 @@ plot.path = "./plots/"
 stats <- read.csv("../data/id_vars_fin.csv")
 stats <- stats[!is.na(stats$AP_ID),]
 row.names(stats) <- stats$AP_ID
+dim(stats)
+# [1] 172  26
 
 
 # ID list
@@ -54,27 +56,39 @@ fd.path = "../data/framwise_displacement/"
 ## get id
 files <- list.files(fd.path, pattern = "_framwise_displacement.tsv")
 id <- sub("sub-", "", files) %>% sub("_framwise_displacement.tsv", "", .)
+length(files)                   
+# [1] 138
 
 #### set nt and ns ####
+# not used
 nt = 400 #number of time series
 ns = length(id) #number of subjects
 
+# fd <- matrix(NA, nrow=nt-1, ncol=ns)
+# for (i in 1:ns) {
+#   if (i%%1==0) print(i)
+#     if (file.exists(paste0(fd.path, "sub-",id[i],"_framwise_displacement.tsv"))) {
+#       fd[,i] = matrix(as.numeric(unlist(read.table(paste(fd.path,"sub-",id[i],"_framwise_displacement.tsv",sep = "")))))
+#  }
+# }
 
-fd <- matrix(NA, nrow=nt-1, ncol=ns)
-for (i in 1:ns) {
-  if (i%%1==0) print(i)
-    if (file.exists(paste0(fd.path, "sub-",id[i],"_framwise_displacement.tsv"))) {
-      fd[,i] = matrix(as.numeric(unlist(read.table(paste(fd.path,"sub-",id[i],"_framwise_displacement.tsv",sep = "")))))
- }
-}
+data <- lapply(files, function(file) {
+  read.csv(paste0(fd.path, file), stringsAsFactors = FALSE, sep = " ", header = F)})
+
+wronglen <- unlist(lapply(data, nrow)) == 399
+
+data <- data[wronglen]
+
+fd <- Reduce(cbind, data_keep)
+
 
 dim(fd) # col = subjects
-colnames(fd) <- id
+colnames(fd) <- id[wronglen]
 
 # omit na column
 fd <- t(na.omit(t(fd)))
 dim(fd)
-# [1] 399 107
+# [1] 399 135
 
 #fd = array(NA,dim=c(nt-1,ns))
 #for (i in 1:ns) {
@@ -116,8 +130,9 @@ dev.off()
 FD_df <- cbind(fd.m, fd.max) %>% as.data.frame()
 
 toexclu <- unique(c(which(fd.m >= mean_cutoff), which(fd.max >= max_cutoff)))
-toexclu                       
-# [1] 10 23
+toexclu
+# [1]  10  11  23  48  54  72  89  90
+# [9] 105  14  58  60  74 132
 
 #so now we exlclude IDs
 #we exlclude 2 IDs - fd exclusions
@@ -125,7 +140,7 @@ toexclu
 #### data frame after FD
 FD_df_after_exclusions <- FD_df[-toexclu,]
 dim(FD_df_after_exclusions)
-# [1] 94   2
+# [1] 121   2
 
 #### histograms AFTER FD exclusions (limits require manual adjustment) ####
 # mean fd
