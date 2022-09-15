@@ -50,16 +50,18 @@ rm(temp)
 # [1] 20
 # [1] 30
 # [1] 40
-# [1] 50
 # [1] "dimensions for subj. AP068 incorrect"
-# [1] 60
+# [1] 50
 # [1] "dimensions for subj. AP078 incorrect"
+# [1] 60
 # [1] 70
 # [1] "dimensions for subj. AP099 incorrect"
 # [1] 80
 # [1] 90
-# [1] 100
 # [1] "dimensions for subj. AP132 incorrect"
+# [1] 100
+# [1] 110
+# [1] 120
 
 
 # load time series
@@ -105,7 +107,7 @@ for (i in 1:ns_no_NA) {
 #### regions 136 (left hippocampus), and 316 (right hippocampus) ####
 ts_no_NA_regions_noHipp <- ts_no_NA_regions[,-c(136, 316),] #exclude the glasser hippocampus regions
 dim(ts_no_NA_regions_noHipp)              
-# [1] 400 374 90
+# [1] 400 374 117
 
 #now, for those with regions missing, we will exclude them completely (n=3),
 #those with a hippocampus region missing, we will keep them, (n=4)
@@ -142,8 +144,8 @@ ts_hippNAs_2 <- ts_hippNAs[,-c(135), c(2)]  #exclude left (136) -  right (316) a
 library(abind)
 ts.final <- abind(ts_hippNAs_1, ts_hippNAs_2, ts_no_NA_regions_noHipp)
 ts.final %>% dim
-# [1] 400 374  92
-## regions:376-2, subjects:94-4+2
+# [1] 400 374  119
+## regions:376-2, subjects:121-4+2
 
 #### create final df ####
 id_final <- unlist(list(id_with_hippNAs_ts[1], id_with_hippNAs_ts[2],
@@ -152,7 +154,7 @@ id_final <- unlist(list(id_with_hippNAs_ts[1], id_with_hippNAs_ts[2],
 #df_final in the correct ID order as the ts_final:
 FD_df_after_all_exclusions <- FD_df_after_exclusions[-which(id_clean_FD %in% c("AP068", "AP078")),] #final inclusions but wrong order
 dim(FD_df_after_all_exclusions)
-# [1] 92 2
+# [1] 119  28
 
 df_final <- FD_df_after_all_exclusions # %>%
   # arrange(factor(FD_df_after_all_exclusions$AP_id, levels = id_final))

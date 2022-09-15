@@ -22,30 +22,30 @@ library(stringr)
 source('rp.main.R')
 
 #### path to save plots ####
-plot.path = "./plots/"
+  plot.path = "./plots/"
 
 
-# load ts.final, df_final
-load("ts.final.RData")
-load("df_final.RData")
+  # load ts.final, df_final
+  load("ts.final.RData")
+  load("df_final.RData")
 
 
-# create fc
-nroi.f = dim(ts.final)[2]  ## 374, regions #new number of rois -previous nroi (initial) = nroi
-ns.f = dim(ts.final)[3] ## 103, subjects
+  # create fc
+  nroi.f = dim(ts.final)[2]  ## 374, regions #new number of rois -previous nroi (initial) = nroi
+  ns.f = dim(ts.final)[3] ## 103, subjects
 
-fc.raw = array(NA,dim=c(nroi.f,nroi.f,ns.f))  # raw FC - before fisher transformation
-for (i in 1:ns.f) {
-  if (i%%10==0) print(i)
-  fc.raw[,,i] = cor(ts.final[,,i])
-}
-dim(fc.raw)
-# [1] 374 374 92
+  fc.raw = array(NA,dim=c(nroi.f,nroi.f,ns.f))  # raw FC - before fisher transformation
+  for (i in 1:ns.f) {
+    if (i%%10==0) print(i)
+    fc.raw[,,i] = cor(ts.final[,,i])
+  }
+  dim(fc.raw)
+  # [1] 374 374 119
 
-# fisher transform correlations
-fc = fisherz(fc.raw)
-dim(fc)
-# [1] 374 374 92
+  # fisher transform correlations
+  fc = fisherz(fc.raw)
+  dim(fc)
+# [1] 374 374 119
 
 
 ## save as individual matrices for python CPM
