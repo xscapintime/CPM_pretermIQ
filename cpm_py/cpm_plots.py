@@ -27,12 +27,13 @@ all_behav_data.dtypes
 all_behav_data = all_behav_data[all_behav_data['AP_ID'].isin(subj_list)]
 all_behav_data = all_behav_data.set_index('AP_ID')
 
+
 # for modeling, no NA allowed
 behav_data = all_behav_data.iloc[:,6:].dropna()
 print(behav_data.shape)
 
 ## PCs
-all_pca_data = pd.read_csv('../data/var19_pca.csv', index_col=0)
+all_pca_data = pd.read_csv('../data/var17_imp_pca.csv', index_col=0)
 all_pca_data.dtypes
 
 # filter
@@ -44,6 +45,7 @@ print(pca_data.shape)
 # read in FC matrices
 condition = 'fc' ## actually no need, should be something like REST or EMO to distinguish different matrices
 all_fc_data = read_in_matrices(subj_list, file_suffix=condition, data_dir=Path(path))
+print(all_all_fc_data.shape)
 fc_data = all_fc_data.loc[pca_data.index]
 print(fc_data.shape) # edge number = n_nodes*(n_nodes-1)/2, 69751 in this case
 
@@ -62,12 +64,17 @@ for s in range(0,all_fc_data.shape[0]):
 # compare all the vars and PCs
 plt.figure(figsize = (12,12))
 p = sns.pairplot(behav_data, kind ='scatter')
-plt.savefig(os.path.join('dist', 'var19_pairdist.pdf'))
+plt.savefig(os.path.join('dist', 'var17_pairdist.pdf'))
 plt.close()
 
 plt.figure(figsize = (5,5))
 p = sns.pairplot(pca_data.iloc[:,:2], kind ='scatter')
 plt.savefig(os.path.join('dist', 'pcs2_pairdist.pdf'))
+plt.close()
+
+plt.figure(figsize = (12,12))
+p = sns.pairplot(pca_data, kind ='scatter')
+plt.savefig(os.path.join('dist', 'pca_pairdist.pdf'))
 plt.close()
 
 
