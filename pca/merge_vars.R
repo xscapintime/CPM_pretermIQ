@@ -1,4 +1,5 @@
-setwd("/mnt/d/PROJECTS/preterm_language/cpm_py")
+setwd("/mnt/d/PROJECTS/preterm_language/pca")
+rm(list = ls())
 
 library(readxl)
 library(tidyverse)
@@ -49,9 +50,9 @@ tb_merge[tb_merge == -998] <- NA
 
 
 vars <- c("AP_ID", "Eprime_ID", "group", "sex", "age22", "age4", "age8",
-        "WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-rrb", "srs-sci", ## AP_marking_JULY, 8 yo
+        "WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-tot", #"srs-rrb", "srs-sci", ## AP_marking_JULY, 8 yo
         "bayley22_cog_comp", "bayley22_language_comp", "bayley22_motor_comp", "parca22_cognitive", "parca22_language",
-        "wppsi4_verb_compr_raw", "wppsi4_visuo_sp_raw", "wppsi4_fluid_res_raw", "wppsi4_working_mem_raw", "wppsi4_proc_speed_raw", "srs4_rrb_raw", "srs4_sci_raw",
+        "wppsi4_verb_compr_raw", "wppsi4_visuo_sp_raw", "wppsi4_fluid_res_raw", "wppsi4_working_mem_raw", "wppsi4_proc_speed_raw", "srs4_sum_subscales", #"srs4_rrb_raw", "srs4_sci_raw",
         "MC_COUNT_TOTAL_FAILS_nooffails")
 
 
@@ -59,9 +60,11 @@ dat <- tb_merge[,vars]
 
 ## merge duplicated
 dup_ap <- na.omit(dat$AP_ID)[na.omit(dat$AP_ID) %>% duplicated()]
+dup_ap
 # [1] "BIPP015" "BIPP016"
 
 dup_ep <- na.omit(dat$Eprime_ID)[na.omit(dat$Eprime_ID) %>% duplicated()]
+dup_ep
 #  [1] 6324 9431 5832 6594 7153 6415
 #  [7] 6652 7224 9429 7448 7654 7519
 # [13] 7699 9406 7427 9444 7439 7207
@@ -104,10 +107,15 @@ dat_fin$WISC_PS_CS <- dat_fin$WISC_PS_CS %>% as.numeric()
 
 
 ## ">90" --> 90
-dat_fin$`srs-rrb`[!grepl("^\\d+", dat_fin$`srs-rrb`)][!dat_fin$`srs-rrb`[!grepl("^\\d+$", dat_fin$`srs-rrb`)] %>% is.na()] <- "90"
-dat_fin$`srs-sci`[!grepl("^\\d+", dat_fin$`srs-sci`)][!dat_fin$`srs-sci`[!grepl("^\\d+$", dat_fin$`srs-sci`)] %>% is.na()] <- "90"
+# dat_fin$`srs-rrb`[!grepl("^\\d+", dat_fin$`srs-rrb`)][!dat_fin$`srs-rrb`[!grepl("^\\d+$", dat_fin$`srs-rrb`)] %>% is.na()] <- "90"
+# dat_fin$`srs-sci`[!grepl("^\\d+", dat_fin$`srs-sci`)][!dat_fin$`srs-sci`[!grepl("^\\d+$", dat_fin$`srs-sci`)] %>% is.na()] <- "90"
+# dat_fin[, c("srs-rrb", "srs-sci")] <- sapply(dat_fin[, c("srs-rrb", "srs-sci")], as.numeric)
 
-dat_fin[, c("srs-rrb", "srs-sci")] <- sapply(dat_fin[, c("srs-rrb", "srs-sci")], as.numeric)
+
+dat_fin$`srs-tot`
+dat_fin$`srs-tot`[!grepl("^\\d+", dat_fin$`srs-tot`)][!dat_fin$`srs-tot`[!grepl("^\\d+$", dat_fin$`srs-tot`)] %>% is.na()] <- "90"
+
+dat_fin[, c("srs-tot")] <- sapply(dat_fin[, c("srs-tot")], as.numeric)
 
 
 str(dat_fin)
@@ -116,3 +124,4 @@ str(dat_fin)
 # export
 write.table(dat_fin, file = "../data/id_vars_fin.csv", sep = ",",
               quote = F, row.names = F, col.names = T)
+
