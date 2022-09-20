@@ -31,9 +31,11 @@ plot.path = "./plots/"
 stats <- read.csv("../data/id_vars_fin.csv")
 stats <- stats[!is.na(stats$AP_ID),]
 row.names(stats) <- stats$AP_ID
-dim(stats)
-# [1] 172  26
 
+# only keep PT
+stats <- stats %>% filter(group == "PT")
+dim(stats)
+# [1] 116  24
 
 # ID list
 # id <- read_excel("../data/For Liyang - IDs resting state preprocessed.xlsx") ## AP ID
@@ -54,15 +56,20 @@ dim(stats)
 fd.path = "../data/framwise_displacement/"
 
 ## get id
-files <- list.files(fd.path, pattern = "_framwise_displacement.tsv")
-id <- sub("sub-", "", files) %>% sub("_framwise_displacement.tsv", "", .)
-length(files)                   
-# [1] 138
+all_files <- list.files(fd.path, pattern = "_framwise_displacement.tsv")
+
+# only keep PT
+id <- sub("sub-", "", all_files) %>% sub("_framwise_displacement.tsv", "", .)
+id <- id[id %in% stats$AP_ID]
+
+files <- paste0("sub-", id, "_framwise_displacement.tsv")
+length(files)
+# [1] 87
 
 #### set nt and ns ####
 # not used
 nt = 400 #number of time series
-ns = length(id) #number of subjects
+ns = length(files) #number of subjects
 
 # fd <- matrix(NA, nrow=nt-1, ncol=ns)
 # for (i in 1:ns) {
@@ -77,7 +84,7 @@ data <- lapply(files, function(file) {
 
 wronglen <- unlist(lapply(data, nrow)) == 399
 
-data <- data[wronglen]
+data_keep <- data[wronglen]
 
 fd <- Reduce(cbind, data_keep)
 
@@ -86,9 +93,10 @@ dim(fd) # col = subjects
 colnames(fd) <- id[wronglen]
 
 # omit na column
+# no NA
 fd <- t(na.omit(t(fd)))
 dim(fd)
-# [1] 399 135
+# [1] 399 85
 
 #fd = array(NA,dim=c(nt-1,ns))
 #for (i in 1:ns) {
@@ -131,8 +139,7 @@ FD_df <- cbind(fd.m, fd.max) %>% as.data.frame()
 
 toexclu <- unique(c(which(fd.m >= mean_cutoff), which(fd.max >= max_cutoff)))
 toexclu
-# [1]  10  11  23  48  54  72  89  90
-# [9] 105  14  58  60  74 132
+# [1]  8  9 33 38 48 49 60 11 82
 
 #so now we exlclude IDs
 #we exlclude 2 IDs - fd exclusions
@@ -140,7 +147,7 @@ toexclu
 #### data frame after FD
 FD_df_after_exclusions <- FD_df[-toexclu,]
 dim(FD_df_after_exclusions)
-# [1] 121   2
+# [1] 76   2
 
 #### histograms AFTER FD exclusions (limits require manual adjustment) ####
 # mean fd

@@ -49,19 +49,13 @@ rm(temp)
 # [1] 10
 # [1] 20
 # [1] 30
-# [1] 40
 # [1] "dimensions for subj. AP068 incorrect"
+# [1] "dimensions for subj. AP099 incorrect"
+# [1] 40
 # [1] 50
-# [1] "dimensions for subj. AP078 incorrect"
+# [1] "dimensions for subj. AP132 incorrect"
 # [1] 60
 # [1] 70
-# [1] "dimensions for subj. AP099 incorrect"
-# [1] 80
-# [1] 90
-# [1] "dimensions for subj. AP132 incorrect"
-# [1] 100
-# [1] 110
-# [1] 120
 
 
 # load time series
@@ -76,7 +70,7 @@ rm(temp)
 #### load time series - excluding the 3 with a missing region
 # find the missing regions
 colninx <- paste0("Mean_", seq(1,376))
-for (id in c("AP068", "AP078", "AP099", "AP132")) {
+for (id in c("AP068", "AP099", "AP132")) {
     tmp <- read.table(paste(ts.path,'sub-', id,'_glasserROI_timeseries_sept29.txt',sep=''), header=TRUE)[,-c(1:2)]
     ms_r <- setdiff(colninx, colnames(tmp)) %>% gsub("Mean_","",.) %>% str_c(., collapse = " ")
     print(paste0(id, ": missing region ", ms_r))
@@ -84,14 +78,13 @@ for (id in c("AP068", "AP078", "AP099", "AP132")) {
 }
 
 # [1] "AP068: missing region 30 135 136 142 252 256 370 371 372 373 374 375 376"
-# [1] "AP078: missing region 310 370 371 372 373 374 375 376"
 # [1] "AP099: missing region 136"
 # [1] "AP132: missing region 316"
 
 
 
 #### time series - only of subjects with no NA regions ####
-id_clean_FD_clean_ts <- id_clean_FD[-which(id_clean_FD %in% c("AP068", "AP078", "AP099", "AP132"))]
+id_clean_FD_clean_ts <- id_clean_FD[-which(id_clean_FD %in% c("AP068", "AP099", "AP132"))]
 id_clean_FD_clean_ts <- as.character(id_clean_FD_clean_ts)
 ns_no_NA = length(id_clean_FD_clean_ts)
 
@@ -107,7 +100,7 @@ for (i in 1:ns_no_NA) {
 #### regions 136 (left hippocampus), and 316 (right hippocampus) ####
 ts_no_NA_regions_noHipp <- ts_no_NA_regions[,-c(136, 316),] #exclude the glasser hippocampus regions
 dim(ts_no_NA_regions_noHipp)              
-# [1] 400 374 117
+# [1] 400 374 73
 
 #now, for those with regions missing, we will exclude them completely (n=3),
 #those with a hippocampus region missing, we will keep them, (n=4)
@@ -144,8 +137,8 @@ ts_hippNAs_2 <- ts_hippNAs[,-c(135), c(2)]  #exclude left (136) -  right (316) a
 library(abind)
 ts.final <- abind(ts_hippNAs_1, ts_hippNAs_2, ts_no_NA_regions_noHipp)
 ts.final %>% dim
-# [1] 400 374  119
-## regions:376-2, subjects:121-4+2
+# [1] 400 374  75
+## regions:376-2, subjects:76-3+2
 
 #### create final df ####
 id_final <- unlist(list(id_with_hippNAs_ts[1], id_with_hippNAs_ts[2],
@@ -154,7 +147,7 @@ id_final <- unlist(list(id_with_hippNAs_ts[1], id_with_hippNAs_ts[2],
 #df_final in the correct ID order as the ts_final:
 FD_df_after_all_exclusions <- FD_df_after_exclusions[-which(id_clean_FD %in% c("AP068", "AP078")),] #final inclusions but wrong order
 dim(FD_df_after_all_exclusions)
-# [1] 119  28
+# [1] 119  26
 
 df_final <- FD_df_after_all_exclusions # %>%
   # arrange(factor(FD_df_after_all_exclusions$AP_id, levels = id_final))
