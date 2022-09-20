@@ -1,4 +1,7 @@
-awk '{print NR  " " $s}' /data/project/BIPP/laila/AP_8yo_fmri_task/lists/list_liyang_new.txt > list_tmp
+#!/bin/bash
+
+#awk '{print NR  " " $s}' /data/project/BIPP/laila/AP_8yo_fmri_task/lists/list_liyang_new.txt > list_tmp
+echo BIPP{038..051} | sed -e 's/  */\n/g' | awk '{print NR  " " $s}' > list_tmp ## 20/09/22 add 14 more
 
 cat list_tmp | while read id
 do
