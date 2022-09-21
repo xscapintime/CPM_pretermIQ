@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import scipy as sp
+from scipy.stats import kstest
 import statistics
 from matplotlib import pyplot as plt
 from cpmFinctions import *
@@ -45,7 +46,7 @@ print(pca_data.shape)
 # read in FC matrices
 condition = 'fc' ## actually no need, should be something like REST or EMO to distinguish different matrices
 all_fc_data = read_in_matrices(subj_list, file_suffix=condition, data_dir=Path(path))
-print(all_all_fc_data.shape)
+print(all_fc_data.shape)
 fc_data = all_fc_data.loc[pca_data.index]
 print(fc_data.shape) # edge number = n_nodes*(n_nodes-1)/2, 69751 in this case
 
@@ -78,6 +79,40 @@ plt.savefig(os.path.join('dist', 'pca_pairdist.pdf'))
 plt.close()
 
 
+
+## Check correlation between behavioral stat vs head motion
+fd = pd.read_csv('../data/fd_mean_max.txt', sep=' ', header=0)
+fd = fd[fd.index.isin(pca_data.index)]
+
+sp.stats.pearsonr(fd['fd.m'], pca_data['PC1'])
+# (0.1783240798203215, 0.1258458793145855)
+sp.stats.pearsonr(fd['fd.m'], pca_data['PC2'])
+# (-0.2585155832221153, 0.02512842358871094)
+
+for pc in ['PC1', 'PC2'] :
+    
+    r = sp.stats.pearsonr(pca_data[pc], fd['fd.m'])[0]
+    p = sp.stats.pearsonr(pca_data[pc], fd['fd.m'])[1]
+
+    plt.figure(figsize = (5,5))
+    g = sns.regplot(x=pca_data[pc], y=fd['fd.m'], color='blue')
+    g.figure.tight_layout()
+    g.annotate('r = {0:.2f}'.format(r), xy = (0.7, 0.1), xycoords = 'axes fraction')
+    g.annotate('p = {0:.2f}'.format(p), xy = (0.7, 0.05), xycoords = 'axes fraction') ##
+    plt.savefig(os.path.join('dist', pc + '_vs_fd.png'))
+    plt.close()
+
+
+
+## check normality of PCs
+kstest(pca_data['PC1'], 'norm')
+# KstestResult(statistic=0.22012991583245278, pvalue=0.0011335296969197106)
+# pval < 0.05, rejct H0, that PC1 is not normally distributed
+
+kstest(pca_data['PC2'], 'norm')
+# KstestResult(statistic=0.20643213219397566, pvalue=0.002792582138901656)
+
+
 # paras for CPM
 cpm_kwargs = {'r_thresh': 0.38, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
 # perc_thresh=1 for top edges selection
@@ -103,7 +138,7 @@ print(coords.shape)
 for behav in pca_data.columns[:2]:
     print(behav)
 
-    behav_obs_pred, all_masks, corr = cpm_wrapper(fc_data, pca_data, behav=behav, **cpm_kwargs)
+    behav_obs_pred, all_masks, corr = cpm_wrapper_seed(fc_data, pca_data, behav=behav, seed = 202209, **cpm_kwargs)
     ## count selected edges
     print('{:.2f} pos edges passed all folds: '.format(((all_masks['pos'].sum(axis=0)/10) >= 1).sum()))
     print('{:.2f} neg edges passed all folds: '.format(((all_masks['neg'].sum(axis=0)/10) >= 1).sum()))
