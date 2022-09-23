@@ -199,6 +199,9 @@ demo_imp <- predict(imp, dat_keep)
 dim(demo_imp)
 # [1] 75 17
 
+# export imputed vars
+write.csv(demo_imp, file = "../data/vars_75subj_imputed.csv", quote = F)
+
 
 ### PCA
 dat <- sapply(demo_imp, as.numeric)
@@ -275,6 +278,9 @@ imp <- preProcess(data, method = "knnImpute", k = 5)
 demo_imp <- predict(imp, data)
 dim(demo_imp)
 # [1] 116 17
+
+# export imputed vars
+write.csv(demo_imp, file = "../data/vars_116subj_imputed.csv", quote = F)
 
 
 ### PCA
