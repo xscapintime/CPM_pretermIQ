@@ -121,14 +121,14 @@ str(dat_fin)
 
 
 # change colnames
-colnames(dat_fin)[8:24] <- c("WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo", "SRS TOTAL 8yo",
+colnames(dat_fin)[8:24] <- c("WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo", "SRS Total 8yo",
         "Bayley Cog 22mo", "Bayley Lang 22mo", "Bayley Motor 22mo", "PARCA Cog 22mo", "PARCA Lang 22mo",
-        "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo", "SRS TOTAL 4yo",
+        "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo", "SRS Total 4yo",
         "MCHAT Failed 8yo")
 
 
-dat_fin <- dat_fin[,c(colnames(dat)[1:7], "WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo", "SRS TOTAL 8yo", "MCHAT Failed 8yo",
-        "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo", "SRS TOTAL 4yo",
+dat_fin <- dat_fin[,c(colnames(dat)[1:7], "WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo", "SRS Total 8yo", "MCHAT Failed 8yo",
+        "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo", "SRS Total 4yo",
         "Bayley Cog 22mo", "Bayley Lang 22mo", "Bayley Motor 22mo", "PARCA Cog 22mo", "PARCA Lang 22mo")] 
 
 

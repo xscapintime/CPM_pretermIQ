@@ -29,6 +29,8 @@ sign.pc<-function(x,R=5000,s=10, cor=T,...){
 ## Load table
 # from final version of vars
 dat_fin <- read.csv("../data/id_vars_fin.csv")
+dim(dat_fin)
+
 dat_fin <- dat_fin %>% filter(!is.na(AP_ID))
 row.names(dat_fin) <- dat_fin$AP_ID
 
@@ -36,6 +38,10 @@ row.names(dat_fin) <- dat_fin$AP_ID
 dat_fin <- dat_fin %>% filter(group == "PT")
 dim(dat_fin)
 # [1] 116  24
+
+# tidy colnams
+colnames(dat_fin) <- gsub(".", " ", colnames(dat_fin), fixed = TRUE)
+
 
 # column as variables
 # vars <- c("WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-rrb", "srs-sci",
@@ -68,19 +74,19 @@ for (i in 1:(ncol(dat_fc))) {
 
 }  # all of vars have > 30% NA
 
-# [1] "WISC.PS.8yo: 1, 0.01"
-# [1] "SRS.TOTAL.8yo: 4, 0.05"
-# [1] "MCHAT.Failed.8yo: 1, 0.01"
-# [1] "WPPSI.VC.4yo: 1, 0.01"
-# [1] "WPPSI.VS.4yo: 1, 0.01"
-# [1] "WPPSI.FR.4yo: 1, 0.01"
-# [1] "WPPSI.PS.4yo: 1, 0.01"
-# [1] "SRS.TOTAL.4yo: 2, 0.03"
-# [1] "Bayley.Cog.22mo: 1, 0.01"
-# [1] "Bayley.Lang.22mo: 1, 0.01"
-# [1] "Bayley.Motor.22mo: 1, 0.01"
-# [1] "PARCA.Cog.22mo: 3, 0.04"
-# [1] "PARCA.Lang.22mo: 3, 0.04"
+# [1] "WISC PS 8yo: 1, 0.01"
+# [1] "SRS Total 8yo: 4, 0.05"
+# [1] "MCHAT Failed 8yo: 1, 0.01"
+# [1] "WPPSI VC 4yo: 1, 0.01"
+# [1] "WPPSI VS 4yo: 1, 0.01"
+# [1] "WPPSI FR 4yo: 1, 0.01"
+# [1] "WPPSI PS 4yo: 1, 0.01"
+# [1] "SRS Total 4yo: 2, 0.03"
+# [1] "Bayley Cog 22mo: 1, 0.01"
+# [1] "Bayley Lang 22mo: 1, 0.01"
+# [1] "Bayley Motor 22mo: 1, 0.01"
+# [1] "PARCA Cog 22mo: 3, 0.04"
+# [1] "PARCA Lang 22mo: 3, 0.04"
 
 
 ## check subjs that with a lot NAs
@@ -123,9 +129,9 @@ dim(dat_keep)
 ## remove all NA
 dat <- sapply(data, as.numeric)
 na.omit(dat) %>% dim
-# [1] 61 17
+# [1] 89 17
 
-row.names(dat) <- subj
+row.names(dat) <- row.names(data)
 res <- prcomp(na.omit(dat), center = T, scale = T) ## no NA allowed, 89 subjects left
 
 summary(res)
@@ -142,7 +148,7 @@ summary(res)
 
 
 pca_sign <- sign.pc(as.data.frame(scale(na.omit(dat), center=T, scale=T)),cor=T)
-pca_sign # the first 3 PCs are significant
+pca_sign # the first 2 PCs are significant
 
 # export PCs
 # write.csv(res$x, file = "../data/var19_pca.csv", quote = F)
