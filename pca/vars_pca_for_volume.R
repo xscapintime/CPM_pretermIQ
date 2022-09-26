@@ -93,20 +93,20 @@ write.csv(fin75, file = "../data/pt_sbj75withfc_newvars_fd_pca_merged.csv", quot
 
 
 #### would not work as have to merge with fd
-## for all 116 pt subj
+# for all 116 pt subj
 # load pca 116 subj
-# pca <- read.csv("../data/var17_sbj116_imp_pca.csv")
+pca <- read.csv("../data/var17_sbj116_imp_pca.csv")
 
-# ## merge vars and pca
-# fin116 <- full_join(
-#   vars_sick_imd,
-#   pca,
-#   by = c("AP_ID" = "X"),
-#   copy = T,
-#   suffix = c(".var", ".pca"),
-#   keep = F,
-#   na_matches = "never"
-# )
+## merge vars and pca
+fin116 <- full_join(
+  vars_sick_imd,
+  pca,
+  by = c("AP_ID" = "X"),
+  copy = T,
+  suffix = c(".var", ".pca"),
+  keep = F,
+  na_matches = "never"
+)
 
-# # export
-# write.csv(fin116, file = "../data/pt_sbj116_newvars_pca_merged.csv", quote = F)
+# export
+write.csv(fin116, file = "../data/pt_sbj116_newvars_pca_merged.csv", quote = F)
