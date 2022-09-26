@@ -114,8 +114,8 @@ kstest(pca_data['PC2'], 'norm')
 
 
 ## load covariates data
-cova_data = pd.read_csv('../data/pt_sbj75withfc_newvars_fd_pca_merged.csv', index_col=1)
-cova_data = cova_data[['sex', 'age22', 'age4', 'age8', 'Neonatal Sickness', 'IMD Score']].dropna() ##
+cova_data = pd.read_csv('../data/pt_sbj75withfc_newvars_imp_fd_pca_merged.csv', index_col=1)
+cova_data = cova_data[['sex', 'age22', 'age4', 'age8', 'Neonatal Sickness', 'IMD Score']]#.dropna() ##
 cova_data.shape
 
 
@@ -147,28 +147,32 @@ covar = ['sex', 'age22', 'age4', 'age8', 'Neonatal Sickness', 'IMD Score']
 fc_data_t = fc_data.loc[:,:2277]
 
 ### k as number of subjects, LOOCV
+k = fc_data_t.shape[0]
+corr_type = 'spearman'
+
 for behav in pca_data.columns[:2]:
     print(behav)
 
-    behav_obs_pred, all_masks, corr = cpm_wrapper_seed_part(fc_data_t, pca_data, behav=behav, cova_data=cova_data, covar=covar, k=fc_data_t.shape[0], seed=202209, **cpm_kwargs)
+    behav_obs_pred, all_masks, corr = cpm_wrapper_seed_part(fc_data_t, pca_data, behav=behav, cova_data=cova_data, covar=covar, k=k, seed=202209, **cpm_kwargs)
     ## count selected edges
     print('{:.2f} pos edges passed all folds: '.format(((all_masks['pos'].sum(axis=0)/10) >= 1).sum()))
     print('{:.2f} neg edges passed all folds: '.format(((all_masks['neg'].sum(axis=0)/10) >= 1).sum()))
     
+    ## export pred table
+    fn = behav + corr_type + '_fold_' + k + '_partcorr_pred.csv'
+    behav_obs_pred.to_csv(fn)
+
     ## plot pred vs obs
     g = plot_predictions(behav_obs_pred)
     g.figure.tight_layout()
-    plt.savefig(os.path.join('models', behav + k + '_partcorr_model.png'))
+    plt.savefig(os.path.join('models', behav + corr_type + '_fold_' + k + '_partcorr_model.png'))
     plt.close()
     
     ## plot edges
     # all_masks(pos/neg matrices) is a binary array, k fold * n total edges, in this case is 10,69751
-    # g = plot_consistent_edges(all_masks, "pos", thresh = 1, color = 'red', node_coords = coords)
-    # plt.savefig(os.path.join('edges', behav + k +'_partcorr_pos_edges.png'))
-    # plt.close()
-    # g = plot_consistent_edges(all_masks, "neg", thresh = 1, color = 'blue', node_coords = coords)
-    # plt.savefig(os.path.join('edges', behav + k + '_partcorr_neg_edges.png'))
-    # plt.close()
-
-
-#### non-correlated and non-sig, few subjects = 51 ####
+    g = plot_consistent_edges(all_masks, "pos", thresh = 1, color = 'red', node_coords = coords)
+    plt.savefig(os.path.join('edges', behav + corr_type + '_fold_' + k + '_partcorr_pos_edges.png'))
+    plt.close()
+    g = plot_consistent_edges(all_masks, "neg", thresh = 1, color = 'blue', node_coords = coords)
+    plt.savefig(os.path.join('edges', behav + corr_type + '_fold_' + k + '_partcorr_neg_edges.png'))
+    plt.close()

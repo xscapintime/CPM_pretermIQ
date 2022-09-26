@@ -17,6 +17,7 @@ import pingouin as pg
 # from sklearn.pipeline import make_pipeline
 # from sklearn.metrics import mean_squared_error
 warnings.simplefilter(action='ignore', category=FutureWarning)
+os.environ['OUTDATED_IGNORE'] = '1'
 
 
 # defualt path
