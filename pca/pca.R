@@ -7,7 +7,7 @@ library(factoextra)
 # library(FactoMineR)
 library(corrplot)
 library(psych)
-library(caret)
+library(VIM)
 library(RColorBrewer)
 
 ## function
@@ -200,18 +200,26 @@ dev.off()
 
 ## PCA after KNN imputation
 # KNN imputation, subjs have FC
-imp <- preProcess(dat_keep, method = "knnImpute", k = 5)
-demo_imp <- predict(imp, dat_keep)
-dim(demo_imp)
-# [1] 75 17
+## impute
+check_na <- cbind(
+   lapply(
+     lapply(dat_keep, is.na)
+     , sum)
+)
+
+names(check_na[check_na[,1] != 0,])
+
+knn <- kNN(dat_keep, variable = names(check_na[check_na[,1] != 0,]), k=3, imp_var=F)
+row.names(knn) <- row.names(dat_keep)
+dim(knn)
 
 # export imputed vars
-write.csv(demo_imp, file = "../data/vars_75subj_imputed.csv", quote = F)
+write.csv(knn, file = "../data/vars_75subj_imputed.csv", quote = F)
 
 
 ### PCA
-dat <- sapply(demo_imp, as.numeric)
-row.names(dat) <- row.names(demo_imp)
+dat <- sapply(knn, as.numeric)
+row.names(dat) <- row.names(knn)
 res <- prcomp(na.omit(dat), center = T, scale = T) ## no NA allowed, 89 subjects left
 
 summary(res)
@@ -280,18 +288,26 @@ dev.off()
 
 
 # KNN imputation, all subjs w/wo FC
-imp <- preProcess(data, method = "knnImpute", k = 5)
-demo_imp <- predict(imp, data)
-dim(demo_imp)
-# [1] 116 17
+## impute
+check_na <- cbind(
+   lapply(
+     lapply(data, is.na)
+     , sum)
+)
+
+names(check_na[check_na[,1] != 0,])
+
+knn <- kNN(data, variable = names(check_na[check_na[,1] != 0,]), k=3, imp_var=F)
+row.names(knn) <- row.names(data)
+dim(knn)
 
 # export imputed vars
-write.csv(demo_imp, file = "../data/vars_116subj_imputed.csv", quote = F)
+write.csv(knn, file = "../data/vars_116subj_imputed.csv", quote = F)
 
 
 ### PCA
-dat <- sapply(demo_imp, as.numeric)
-row.names(dat) <- row.names(demo_imp)
+dat <- sapply(knn, as.numeric)
+row.names(dat) <- row.names(knn)
 res <- prcomp(na.omit(dat), center = T, scale = T) ## no NA allowed, 89 subjects left
 
 summary(res)

@@ -3,7 +3,7 @@ rm(list = ls())
 
 library(readxl)
 library(tidyverse)
-
+library(VIM)
 
 ## merge description with pca
 # load merged vars
@@ -91,6 +91,21 @@ fin75 <- right_join(
 write.csv(fin75, file = "../data/pt_sbj75withfc_newvars_fd_pca_merged.csv", quote = F)
 
 
+## impute
+check_na <- cbind(
+   lapply(
+     lapply(fin75, is.na)
+     , sum)
+)
+
+names(check_na[check_na[,1] != 0,])
+
+knn75 <- kNN(fin75, variable=names(check_na[check_na[,1] != 0,]), k=3, imp_var=F)
+
+# export
+write.csv(knn75, file = "../data/pt_sbj75withfc_newvars_imp_fd_pca_merged.csv", quote = F)
+
+
 
 #### would not work as have to merge with fd
 # for all 116 pt subj
@@ -110,3 +125,18 @@ fin116 <- full_join(
 
 # export
 write.csv(fin116, file = "../data/pt_sbj116_newvars_pca_merged.csv", quote = F)
+
+
+## impute
+check_na <- cbind(
+   lapply(
+     lapply(fin116, is.na)
+     , sum)
+)
+
+names(check_na[check_na[,1] != 0,])
+
+knn116 <- kNN(fin116, variable=names(check_na[check_na[,1] != 0,]), k=3, imp_var=F)
+
+# export
+write.csv(knn116, file = "../data/pt_sbj116withfc_newvars_imp_fd_pca_merged.csv", quote = F)
