@@ -10,6 +10,12 @@ from pathlib import Path
 import os
 import warnings
 from nilearn.plotting import plot_connectome
+import pingouin as pg
+
+# from sklearn.preprocessing import PolynomialFeatures
+# from sklearn.linear_model import LinearRegression
+# from sklearn.pipeline import make_pipeline
+# from sklearn.metrics import mean_squared_error
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
@@ -145,6 +151,18 @@ def get_train_test_data(all_fc_data, train_subs, test_subs, behav_data, behav):
 
 
 
+def get_train_test_cova(train_subs, test_subs, cova_data):
+
+    """
+    Extracts covariates data for a list of train_subs and test_subs
+    """
+    train_cova = cova_data.loc[train_subs, :]
+    # test_cova = cova_data.loc[test_subs, :]
+
+    return (train_cova)
+
+
+
 def select_features(train_vcts, train_behav, r_thresh=0.2, corr_type='pearson', verbose=False):
     
     """
@@ -174,6 +192,39 @@ def select_features(train_vcts, train_behav, r_thresh=0.2, corr_type='pearson', 
         print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
 
     return mask_dict, corr
+
+
+##### feature selection func using partial correlation
+def select_features_part(train_vcts, train_behav, behav, train_cova, covar, r_thresh=0.2, corr_type='pearson', verbose=False):
+    
+    """
+    Runs the CPM feature selection step: 
+    - partial correlation of each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
+    """
+
+    assert train_vcts.index.equals(train_behav.index), "Row indices of FC vcts and behavior don't match!"
+
+    # Correlate all edges with behav vector
+    tmp_df = pd.concat([train_vcts, train_behav, train_cova], axis=1)
+    # tmp_df.head().pcorr() ## too big
+
+    corr = []
+    for edge in train_vcts.columns:
+        r_val = pg.partial_corr(tmp_df, x=edge, y=behav, covar=covar, method=corr_type)['r'][0]
+        corr.append(r_val)
+    corr = pd.Series(corr) # list bug
+
+    # Define positive and negative masks
+    mask_dict = {}
+    mask_dict["pos"] = corr > r_thresh
+    mask_dict["neg"] = corr < -r_thresh
+    
+    if verbose:
+        print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
+
+    return mask_dict, corr
+
+
 
 
 ### feature selection func with p-val ###
@@ -337,6 +388,52 @@ def apply_model(test_vcts, mask_dict, model_dict):
     return behav_pred
 
 
+
+
+###### multivariable polynomial ######
+#### not this ####
+#### unfinished ####
+# def build_model_cova(train_vcts, mask_dict, train_behav, train_cova, degree=2):
+#     """
+#     Builds a CPM model:
+#     - takes a feature mask, sums all edges in the mask for each subject, and uses simple linear regression to relate summed network strength to behavior
+#     """
+
+#     assert train_vcts.index.equals(train_behav.index), "Row indices of FC vcts and behavior don't match!"
+
+#     model_dict = {}
+
+#     # Loop through pos and neg tails
+#     X_glm = np.zeros((train_vcts.shape[0], len(mask_dict.items())))
+
+#     t = 0
+#     for tail, mask in mask_dict.items():
+#         X = train_vcts.values[:, mask].sum(axis=1)
+#         X_cova = np.hstack((X.reshape(train_vcts.shape[0],1), train_cova[['sex', 'age22']].values))
+#         X_glm[:, t] = X
+#         y = train_behav
+
+#         poly_model = PolynomialFeatures(degree=degree)
+#         poly_model = make_pipeline(PolynomialFeatures(), LinearRegression())
+#         poly_model.fit(X_cova, y)
+
+
+#         # (slope, intercept) = np.polyfit(X, y, 1)
+#         # model_dict[tail] = (slope, intercept)
+#         t+=1
+
+#     X_glm = np.c_[X_glm, np.ones(X_glm.shape[0])]
+#     model_dict["glm"] = tuple(np.linalg.lstsq(X_glm, y, rcond=None)[0])
+
+#     return model_dict
+
+
+
+
+
+
+
+
 # original one, r_thresh
 def cpm_wrapper(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
     
@@ -493,6 +590,46 @@ def cpm_wrapper_seed(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cp
     return behav_obs_pred, all_masks, corr
 
 
+## samping with seed and partial correlation
+def cpm_wrapper_seed_part(all_fc_data, all_behav_data, behav, cova_data, covar, k=10, seed=202208, **cpm_kwargs):
+    
+    assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
+
+    subj_list = all_fc_data.index # get subj_list from df index
+    
+    indices = mk_kfold_indices_seed(subj_list, k=k, seed=seed)
+    
+    # Initialize df for storing observed and predicted behavior
+    col_list = []
+    for tail in ["pos", "neg", "glm"]:
+        col_list.append(behav + " predicted (" + tail + ")")
+    col_list.append(behav + " observed")
+    behav_obs_pred = pd.DataFrame(index=subj_list, columns = col_list)
+    
+    # Initialize array for storing feature masks
+    n_edges = all_fc_data.shape[1]
+    all_masks = {}
+    all_masks["pos"] = np.zeros((k, n_edges))
+    all_masks["neg"] = np.zeros((k, n_edges))
+    
+    for fold in range(k):
+        print("doing fold {}".format(fold))
+        train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
+        train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
+        train_cova = get_train_test_cova(train_subs, test_subs, cova_data)
+        mask_dict, corr = select_features_part(train_vcts, train_behav, behav, train_cova, covar, **cpm_kwargs)
+        all_masks["pos"][fold,:] = mask_dict["pos"]
+        all_masks["neg"][fold,:] = mask_dict["neg"]
+
+        model_dict = build_model(train_vcts, mask_dict, train_behav) ##
+        behav_pred = apply_model(test_vcts, mask_dict, model_dict) ##
+        
+        for tail, predictions in behav_pred.items():
+            behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
+            
+    behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
+    
+    return behav_obs_pred, all_masks, corr
 
 
 # plot

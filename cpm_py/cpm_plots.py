@@ -113,32 +113,44 @@ kstest(pca_data['PC2'], 'norm')
 # KstestResult(statistic=0.20643213219397566, pvalue=0.002792582138901656)
 
 
-# paras for CPM
-cpm_kwargs = {'r_thresh': 0.38, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
-# perc_thresh=1 for top edges selection
-# cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+## load covariates data
+cova_data = pd.read_csv('../data/pt_sbj75withfc_newvars_fd_pca_merged.csv', index_col=1)
+cova_data = cova_data[['sex', 'age22', 'age4', 'age8', 'Neonatal Sickness', 'IMD Score']].dropna() ##
+cova_data.shape
+
+
+##### for NA in covariates ####
+### might remove this step ###
+fc_data = all_fc_data.loc[cova_data.index]
+print(fc_data.shape)
+
+pca_data = pca_data.loc[cova_data.index]
+print(pca_data.shape)
+
+
 
 ## viz edges
 coords = pd.read_csv("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", index_col=None, header=None, sep=" ")
 print(coords.shape)
 
-
-# pred vs obs scatter
-# all vars, don't need this, use PCs
-# for behav in behav_data.columns[6:]:
-#     print(behav)
-#     behav_obs_pred, all_masks = cpm_wrapper(fc_data, behav_data, behav=behav, **cpm_kwargs)
-#     g = plot_predictions(behav_obs_pred) 
-#     g.figure.tight_layout()
-#     plt.savefig(os.path.join('models', behav + '_model.png'))
-#     plt.close()
+# paras for CPM
+cpm_kwargs = {'r_thresh': 0.38, 'corr_type': 'spearman', 'verbose': False} ## use spearman if the distribution is skewed
+# perc_thresh=1 for top edges selection
+# cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+covar = ['sex', 'age22', 'age4', 'age8', 'Neonatal Sickness', 'IMD Score']
 
 
 # plots, would be one of the random cases
+# set k as the number of subjects, Leave-One-Out Cross-Validation (LOOCV)
+
+## make a test fc_data of 50 nodes, 68*67/2
+fc_data_t = fc_data.loc[:,:2277]
+
+### k as number of subjects, LOOCV
 for behav in pca_data.columns[:2]:
     print(behav)
 
-    behav_obs_pred, all_masks, corr = cpm_wrapper_seed(fc_data, pca_data, behav=behav, seed = 202209, **cpm_kwargs)
+    behav_obs_pred, all_masks, corr = cpm_wrapper_seed_part(fc_data_t, pca_data, behav=behav, cova_data=cova_data, covar=covar, k=fc_data_t.shape[0], seed=202209, **cpm_kwargs)
     ## count selected edges
     print('{:.2f} pos edges passed all folds: '.format(((all_masks['pos'].sum(axis=0)/10) >= 1).sum()))
     print('{:.2f} neg edges passed all folds: '.format(((all_masks['neg'].sum(axis=0)/10) >= 1).sum()))
@@ -146,17 +158,17 @@ for behav in pca_data.columns[:2]:
     ## plot pred vs obs
     g = plot_predictions(behav_obs_pred)
     g.figure.tight_layout()
-    plt.savefig(os.path.join('models', behav + '_model.png'))
+    plt.savefig(os.path.join('models', behav + k + '_partcorr_model.png'))
     plt.close()
     
     ## plot edges
     # all_masks(pos/neg matrices) is a binary array, k fold * n total edges, in this case is 10,69751
-    g = plot_consistent_edges(all_masks, "pos", thresh = 1, color = 'red', node_coords = coords)
-    plt.savefig(os.path.join('edges', behav + '_pos_edges.png'))
-    plt.close()
-    g = plot_consistent_edges(all_masks, "neg", thresh = 1, color = 'blue', node_coords = coords)
-    plt.savefig(os.path.join('edges', behav + '_neg_edges.png'))
-    plt.close()
+    # g = plot_consistent_edges(all_masks, "pos", thresh = 1, color = 'red', node_coords = coords)
+    # plt.savefig(os.path.join('edges', behav + k +'_partcorr_pos_edges.png'))
+    # plt.close()
+    # g = plot_consistent_edges(all_masks, "neg", thresh = 1, color = 'blue', node_coords = coords)
+    # plt.savefig(os.path.join('edges', behav + k + '_partcorr_neg_edges.png'))
+    # plt.close()
 
 
 #### non-correlated and non-sig, few subjects = 51 ####
