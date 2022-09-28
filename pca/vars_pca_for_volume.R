@@ -51,7 +51,7 @@ row.names(vars_sick_imd) <- vars_sick_imd$AP_ID
 # only keep PT
 vars_sick_imd <- vars_sick_imd %>% filter(group == "PT")
 dim(vars_sick_imd)
-# [1] 116  24
+# [1] 126  24
 
 # tidy colnams
 colnames(vars_sick_imd) <- gsub(".", " ", colnames(vars_sick_imd), fixed = TRUE)
@@ -108,12 +108,13 @@ write.csv(knn75, file = "../data/pt_sbj75withfc_newvars_imp_fd_pca_merged.csv", 
 
 
 #### would not work as have to merge with fd
-# for all 116 pt subj
-# load pca 116 subj
-pca <- read.csv("../data/var17_sbj116_imp_pca.csv")
+# for all 126 pt subj
+# load pca 126 subj
+# pca <- read.csv("../data/var17_sbj116_imp_pca.csv")
+pca <- read.csv("../data/var17_sbj126_imp_pca.csv")
 
 ## merge vars and pca
-fin116 <- full_join(
+fin126 <- full_join(
   vars_sick_imd,
   pca,
   by = c("AP_ID" = "X"),
@@ -124,19 +125,21 @@ fin116 <- full_join(
 )
 
 # export
-write.csv(fin116, file = "../data/pt_sbj116_newvars_pca_merged.csv", quote = F)
+# write.csv(fin116, file = "../data/pt_sbj116_newvars_pca_merged.csv", quote = F)
+write.csv(fin126, file = "../data/pt_sbj126_newvars_pca_merged.csv", quote = F)
 
 
 ## impute
 check_na <- cbind(
    lapply(
-     lapply(fin116, is.na)
+     lapply(fin126, is.na)
      , sum)
 )
 
 names(check_na[check_na[,1] != 0,])
 
-knn116 <- kNN(fin116, variable=names(check_na[check_na[,1] != 0,]), k=3, imp_var=F)
+knn126 <- kNN(fin126, variable=names(check_na[check_na[,1] != 0,]), k=3, imp_var=F)
 
 # export
-write.csv(knn116, file = "../data/pt_sbj116withfc_newvars_imp_fd_pca_merged.csv", quote = F)
+# write.csv(knn116, file = "../data/pt_sbj116_newvars_imp_pca_merged.csv", quote = F)
+write.csv(knn126, file = "../data/pt_sbj126_newvars_imp_pca_merged.csv", quote = F)

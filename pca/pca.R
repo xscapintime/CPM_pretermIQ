@@ -37,7 +37,7 @@ row.names(dat_fin) <- dat_fin$AP_ID
 # only keep PT
 dat_fin <- dat_fin %>% filter(group == "PT")
 dim(dat_fin)
-# [1] 116  24
+# [1] 126  24
 
 # tidy colnams
 colnames(dat_fin) <- gsub(".", " ", colnames(dat_fin), fixed = TRUE)
@@ -52,7 +52,7 @@ colnames(dat_fin) <- gsub(".", " ", colnames(dat_fin), fixed = TRUE)
 
 data <- dat_fin[,-c(1:7)]
 dim(data)
-# [1] 116  17
+# [1] 126  17
 
 
 ## match with subj with FC
@@ -129,7 +129,7 @@ dim(dat_keep)
 ## remove all NA
 dat <- sapply(data, as.numeric)
 na.omit(dat) %>% dim
-# [1] 89 17
+# [1] 93 17
 
 row.names(dat) <- row.names(data)
 res <- prcomp(na.omit(dat), center = T, scale = T) ## no NA allowed, 89 subjects left
@@ -302,7 +302,8 @@ row.names(knn) <- row.names(data)
 dim(knn)
 
 # export imputed vars
-write.csv(knn, file = "../data/vars_116subj_imputed.csv", quote = F)
+# write.csv(knn, file = "../data/vars_116subj_imputed.csv", quote = F)
+write.csv(knn, file = "../data/vars_126subj_imputed.csv", quote = F)
 
 
 ### PCA
@@ -327,7 +328,8 @@ pca_sign # the first 2 PCs are significant
 
 # export PCs
 # write.csv(res$x, file = "../data/var19_imp_pca.csv", quote = F)
-write.csv(res$x, file = "../data/var17_sbj116_imp_pca.csv", quote = F)
+# write.csv(res$x, file = "../data/var17_sbj116_imp_pca.csv", quote = F)
+write.csv(res$x, file = "../data/var17_sbj126_imp_pca.csv", quote = F)
 
 
 
@@ -346,18 +348,21 @@ rmat <- rmat[-(1:ncol(res$x)), -(ncol(na.omit(dat)):ncol(rmat))]
 
 
 # viz
-png("scree_imp_sbj116.png", width = 700, height = 580)
+# png("scree_imp_sbj116.png", width = 700, height = 580)
+png("scree_imp_sbj126.png", width = 700, height = 580)
 fviz_eig(res)
 dev.off()
 
 
-png("scree_allpc_imp_sbj116.png", width = 700, height = 580)
+# png("scree_allpc_imp_sbj116.png", width = 700, height = 580)
+png("scree_allpc_imp_sbj126.png", width = 700, height = 580)
 fviz_eig(res, ncp = 19)
 dev.off()
 
 
 
-png("corr_rotation_imp_sbj116.png", width = 580, height = 580)
+# png("corr_rotation_imp_sbj116.png", width = 580, height = 580)
+png("corr_rotation_imp_sbj126.png", width = 580, height = 580)
 corrplot(res$rotation, p.mat = pmat, sig.level = c(0.001, 0.01, 0.05), pch.cex = 0.9,
          insig = 'label_sig', pch.col = 'grey20',
          col = rev(colorRampPalette(brewer.pal(11, "RdBu"))(200)),
@@ -365,7 +370,8 @@ corrplot(res$rotation, p.mat = pmat, sig.level = c(0.001, 0.01, 0.05), pch.cex =
 dev.off()
 
 
-png("corr_rmat_imp_sbj116.png", width = 580, height = 580)
+# png("corr_rmat_imp_sbj116.png", width = 580, height = 580)
+png("corr_rmat_imp_sbj126.png", width = 580, height = 580)
 corrplot(rmat, p.mat = pmat, sig.level = c(0.001, 0.01, 0.05), pch.cex = 0.9,
          insig = 'label_sig', pch.col = 'grey20',
          col = rev(colorRampPalette(brewer.pal(11, "RdBu"))(200)),

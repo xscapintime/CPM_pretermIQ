@@ -5,10 +5,11 @@ library(readxl)
 library(tidyverse)
 
 ## Load table
-tb1 <- read_excel("../data/AP_marking_JULY 2022.xlsx", sheet = "Master")
+tb1 <- read_excel("../data/AP_marking_17_aug21 sept 28 22.xlsx", sheet = "Master") #AP_marking_JULY 2022.xlsx
 tb1 <- tb1[-1, ]
 tb1 <- tb1 %>% filter(!is.na(AP_ID) & !is.na(Eprime_ID))
 tb1$Eprime_ID <- as.numeric(tb1$Eprime_ID) %>% as.character()
+tb1 <- tb1 %>% filter(grepl("AP|BIPP", AP_ID))
 
 tb2 <- read_excel("../data/ePrime_BIPP_master_file_GEORGE_LHv4 correct tmcq.xlsx")
 tb2$EP_id <- as.character(tb2$EP_id)
@@ -124,10 +125,10 @@ str(dat_fin)
 colnames(dat_fin)[8:24] <- c("WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo", "SRS Total 8yo",
         "Bayley Cog 22mo", "Bayley Lang 22mo", "Bayley Motor 22mo", "PARCA Cog 22mo", "PARCA Lang 22mo",
         "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo", "SRS Total 4yo",
-        "MCHAT Failed 8yo")
+        "MCHAT Fails 8yo")
 
 
-dat_fin <- dat_fin[,c(colnames(dat)[1:7], "WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo", "SRS Total 8yo", "MCHAT Failed 8yo",
+dat_fin <- dat_fin[,c(colnames(dat)[1:7], "WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo", "SRS Total 8yo", "MCHAT Fails 8yo",
         "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo", "SRS Total 4yo",
         "Bayley Cog 22mo", "Bayley Lang 22mo", "Bayley Motor 22mo", "PARCA Cog 22mo", "PARCA Lang 22mo")] 
 
