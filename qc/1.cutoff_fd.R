@@ -84,6 +84,10 @@ data <- lapply(files, function(file) {
 
 wronglen <- unlist(lapply(data, nrow)) == 399
 
+## which subj
+id[!wronglen]                     
+# [1] "AP049" "AP067"
+
 data_keep <- data[wronglen]
 
 fd <- Reduce(cbind, data_keep)
@@ -140,6 +144,12 @@ FD_df <- cbind(fd.m, fd.max) %>% as.data.frame()
 toexclu <- unique(c(which(fd.m >= mean_cutoff), which(fd.max >= max_cutoff)))
 toexclu
 # [1]  8  9 33 38 48 49 60 11 82
+
+row.names(FD_df)[toexclu]         
+# [1] "AP014"   "AP015"   "AP060"  
+# [4] "AP069"   "AP111"   "AP112"  
+# [7] "AP131"   "AP018"   "BIPP033"
+
 
 #so now we exlclude IDs
 #we exlclude 2 IDs - fd exclusions
