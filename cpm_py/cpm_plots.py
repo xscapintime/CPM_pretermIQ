@@ -159,20 +159,35 @@ for behav in pca_data.columns[:2]:
     print('{:.2f} neg edges passed all folds: '.format(((all_masks['neg'].sum(axis=0)/10) >= 1).sum()))
     
     ## export pred table
-    fn = behav + corr_type + '_fold_' + k + '_partcorr_pred.csv'
+    fn = behav + '_' + corr_type + '_fold_' + str(k) + '_partcorr_pred.csv'
     behav_obs_pred.to_csv(fn)
 
     ## plot pred vs obs
     g = plot_predictions(behav_obs_pred)
     g.figure.tight_layout()
-    plt.savefig(os.path.join('models', behav + corr_type + '_fold_' + k + '_partcorr_model.png'))
+    plt.savefig(os.path.join('models', behav + '_' + corr_type + '_fold_' + str(k) + '_partcorr_model.png'))
     plt.close()
+
     
-    ## plot edges
-    # all_masks(pos/neg matrices) is a binary array, k fold * n total edges, in this case is 10,69751
-    g = plot_consistent_edges(all_masks, "pos", thresh = 1, color = 'red', node_coords = coords)
-    plt.savefig(os.path.join('edges', behav + corr_type + '_fold_' + k + '_partcorr_pos_edges.png'))
-    plt.close()
-    g = plot_consistent_edges(all_masks, "neg", thresh = 1, color = 'blue', node_coords = coords)
-    plt.savefig(os.path.join('edges', behav + corr_type + '_fold_' + k + '_partcorr_neg_edges.png'))
-    plt.close()
+    ## edges
+    for tail in all_masks.keys():
+        edfn = tail + '_' + behav + '_' + corr_type + '_fold_' + str(k)
+        
+        edge_frac = (all_masks[tail].sum(axis=0))/(all_masks[tail].shape[0])
+        edge_frac_square = sp.spatial.distance.squareform(edge_frac)
+        
+        # export pos and neg matrices
+        edmat = edfn + '_partcorr_bn.csv'
+        np.savetxt(edmat, edge_frac_square, delimiter=',', fmt='%1.0f')
+    
+        # plot edges
+        # all_masks(pos/neg matrices) is a binary array, k fold * n total edges, in this case is 10,69751
+        if tail == 'pos':
+            color = 'red'
+        else:
+            color = 'blue'
+        
+        g = plot_consistent_edges(all_masks, tail, thresh = 1, color = color, node_coords = coords)
+        plt.savefig(os.path.join('edges', edfn + '_partcorr_edges.png'))
+        plt.close()
+    
