@@ -101,17 +101,13 @@ for (i in 1:ns_no_NA) {
 ts_no_NA_regions_noHipp <- ts_no_NA_regions[,-c(136, 316),] #exclude the glasser hippocampus regions
 dim(ts_no_NA_regions_noHipp)              
 # [1] 400 374 73
+# [1] 400 374  80
 
 #now, for those with regions missing, we will exclude them completely (n=3),
 #those with a hippocampus region missing, we will keep them, (n=4)
 #and remove the other hippocampus region
 #### load time series - excluding those with a missing region that isn't hippocampus ####
 
-# previously checked
-# [1] "AP068: region 30 135 136 142 252 256 370 371 372 373 374 375 376"
-# [1] "AP078: region 310 370 371 372 373 374 375 376"
-# [1] "AP099: region 136"
-# [1] "AP132: region 316"
 
 #### ts for those with one hipp region missing: ####
 id_with_hippNAs_ts <- id_clean_FD[which(id_clean_FD %in% c("AP099", "AP132"))] # AP068 has too many regions missing
@@ -139,6 +135,8 @@ ts.final <- abind(ts_hippNAs_1, ts_hippNAs_2, ts_no_NA_regions_noHipp)
 ts.final %>% dim
 # [1] 400 374  75
 ## regions:376-2, subjects:76-3+2
+# [1] 400 374  82
+## subjects + 7
 
 #### create final df ####
 id_final <- unlist(list(id_with_hippNAs_ts[1], id_with_hippNAs_ts[2],
@@ -147,7 +145,7 @@ id_final <- unlist(list(id_with_hippNAs_ts[1], id_with_hippNAs_ts[2],
 #df_final in the correct ID order as the ts_final:
 FD_df_after_all_exclusions <- FD_df_after_exclusions[-which(id_clean_FD %in% c("AP068", "AP078")),] #final inclusions but wrong order
 dim(FD_df_after_all_exclusions)
-# [1] 119  26
+# [1] 82  26
 
 df_final <- FD_df_after_all_exclusions # %>%
   # arrange(factor(FD_df_after_all_exclusions$AP_id, levels = id_final))

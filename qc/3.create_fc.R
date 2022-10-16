@@ -32,7 +32,7 @@ load("df_final.RData")
 
 # create fc
 nroi.f = dim(ts.final)[2]  ## 374, regions #new number of rois -previous nroi (initial) = nroi
-ns.f = dim(ts.final)[3] ## 75, subjects
+ns.f = dim(ts.final)[3] ## 82, subjects
 
 fc.raw = array(NA,dim=c(nroi.f,nroi.f,ns.f))  # raw FC - before fisher transformation
 for (i in 1:ns.f) {
@@ -40,12 +40,12 @@ for (i in 1:ns.f) {
   fc.raw[,,i] = cor(ts.final[,,i])
 }
 dim(fc.raw)
-# [1] 374 374 75
+# [1] 374 374 82
 
 # fisher transform correlations
 fc = fisherz(fc.raw)
 dim(fc)
-# [1] 374 374 75
+# [1] 374 374 82
 
 
 ## save as individual matrices for python CPM
@@ -94,4 +94,3 @@ triup = upper.tri(matrix(nrow=nroi.f,ncol=nroi.f))
 fc.m_final = vector(length=ns.f)
 for (n in 1:ns.f) fc.m_final[n] = mean(fc[,,n][triup],na.rm=T)
 save(fc.m_final, file = "fc.m_final.RData")
-

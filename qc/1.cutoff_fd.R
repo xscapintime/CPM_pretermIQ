@@ -35,7 +35,7 @@ row.names(stats) <- stats$AP_ID
 # only keep PT
 stats <- stats %>% filter(group == "PT")
 dim(stats)
-# [1] 116  24
+# [1] 126  24
 
 # ID list
 # id <- read_excel("../data/For Liyang - IDs resting state preprocessed.xlsx") ## AP ID
@@ -65,6 +65,7 @@ id <- id[id %in% stats$AP_ID]
 files <- paste0("sub-", id, "_framwise_displacement.tsv")
 length(files)
 # [1] 87
+# [1] 94
 
 #### set nt and ns ####
 # not used
@@ -101,6 +102,7 @@ colnames(fd) <- id[wronglen]
 fd <- t(na.omit(t(fd)))
 dim(fd)
 # [1] 399 85
+# [1] 399  92
 
 #fd = array(NA,dim=c(nt-1,ns))
 #for (i in 1:ns) {
@@ -158,6 +160,7 @@ row.names(FD_df)[toexclu]
 FD_df_after_exclusions <- FD_df[-toexclu,]
 dim(FD_df_after_exclusions)
 # [1] 76   2
+# [1] 83  2
 
 #### histograms AFTER FD exclusions (limits require manual adjustment) ####
 # mean fd
