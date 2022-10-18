@@ -9,12 +9,14 @@ from matplotlib import pyplot as plt
 
 
 # load impted vars table
-vars = pd.read_csv('../data/vars_75subj_imputed.csv', index_col=0)
+vars = pd.read_csv('../data/vars_126subj_imputed.csv', index_col=0)
 
 # laod fd table
 fd = pd.read_csv('../data/fd_mean_max.txt', index_col=0, sep=' ')
 fd = fd[['fd.m', 'fd.max']]
 
+# mach the subj
+vars = vars.loc[fd.index]
 
 # check correlation between fd mean and all vars
 

@@ -61,6 +61,11 @@ subj <- gsub(".fc.txt", "", fc_files)
 
 dat_fc <- data[rownames(data) %in% subj,]
 dim(dat_fc)
+# [1] 82 17
+
+# need to remove subjs that will be used for external validation
+dat_fc <- dat_fc[-seq(76,82),]
+dim(dat_fc)
 # [1] 75 17
 
 
@@ -72,11 +77,10 @@ for (i in 1:(ncol(dat_fc))) {
       print(paste0(colnames(dat_fc)[i], ": ", n_na , ", ", round(is.na(dat_fc[,i]) %>% sum() / nrow(dat_fc), 2)))
   }
 
-}  # all of vars have > 30% NA
+}
 
 # [1] "WISC PS 8yo: 1, 0.01"
 # [1] "SRS Total 8yo: 4, 0.05"
-# [1] "MCHAT Failed 8yo: 1, 0.01"
 # [1] "WPPSI VC 4yo: 1, 0.01"
 # [1] "WPPSI VS 4yo: 1, 0.01"
 # [1] "WPPSI FR 4yo: 1, 0.01"
@@ -87,6 +91,7 @@ for (i in 1:(ncol(dat_fc))) {
 # [1] "Bayley Motor 22mo: 1, 0.01"
 # [1] "PARCA Cog 22mo: 3, 0.04"
 # [1] "PARCA Lang 22mo: 3, 0.04"
+# [1] "MCHAT Fails 22mo: 1, 0.01"
 
 
 ## check subjs that with a lot NAs
