@@ -37,7 +37,7 @@ row.names(dat_fin) <- dat_fin$AP_ID
 # only keep PT
 dat_fin <- dat_fin %>% filter(group == "PT")
 dim(dat_fin)
-# [1] 126  24
+# [1] 126  28
 
 # tidy colnams
 colnames(dat_fin) <- gsub(".", " ", colnames(dat_fin), fixed = TRUE)
@@ -52,7 +52,7 @@ colnames(dat_fin) <- gsub(".", " ", colnames(dat_fin), fixed = TRUE)
 
 data <- dat_fin[,-c(1:7)]
 dim(data)
-# [1] 126  17
+# [1] 126  21
 
 
 ## match with subj with FC
@@ -61,12 +61,12 @@ subj <- gsub(".fc.txt", "", fc_files)
 
 dat_fc <- data[rownames(data) %in% subj,]
 dim(dat_fc)
-# [1] 82 17
+# [1] 82 21
 
 # need to remove subjs that will be used for external validation
 dat_fc <- dat_fc[-seq(76,82),]
 dim(dat_fc)
-# [1] 75 17
+# [1] 75 21
 
 
 ## remove vars that NA > 30% subj
@@ -81,11 +81,15 @@ for (i in 1:(ncol(dat_fc))) {
 
 # [1] "WISC PS 8yo: 1, 0.01"
 # [1] "SRS Total 8yo: 4, 0.05"
+# [1] "SRS RRB 8yo: 4, 0.05"
+# [1] "SRS SCI 8yo: 4, 0.05"
 # [1] "WPPSI VC 4yo: 1, 0.01"
 # [1] "WPPSI VS 4yo: 1, 0.01"
 # [1] "WPPSI FR 4yo: 1, 0.01"
 # [1] "WPPSI PS 4yo: 1, 0.01"
 # [1] "SRS Total 4yo: 2, 0.03"
+# [1] "SRS RRB 4yo: 2, 0.03"
+# [1] "SRS SCI 4yo: 2, 0.03"
 # [1] "Bayley Cog 22mo: 1, 0.01"
 # [1] "Bayley Lang 22mo: 1, 0.01"
 # [1] "Bayley Motor 22mo: 1, 0.01"
@@ -103,18 +107,18 @@ for (i in 1:(nrow(dat_fc))) {
 
 # [1] "AP004: 2"
 # [1] "AP005: 2"
-# [1] "AP010: 1"
-# [1] "AP011: 1"
+# [1] "AP010: 3"
+# [1] "AP011: 3"
 # [1] "AP012: 1"
 # [1] "AP020: 1"
 # [1] "AP121: 1"
-# [1] "BIPP002: 1"
-# [1] "BIPP003: 1"
+# [1] "BIPP002: 3"
+# [1] "BIPP003: 3"
 # [1] "BIPP008: 1"
 # [1] "BIPP017: 6"
 # [1] "BIPP021: 1"
-# [1] "BIPP022: 1"
-# [1] "BIPP023: 1"
+# [1] "BIPP022: 3"
+# [1] "BIPP023: 3"
 
 
 dat_keep <- dat_fc[apply(is.na(dat_fc), 1, sum) <= 6,]
@@ -127,14 +131,14 @@ for (i in 1:(ncol(dat_keep))) {
 
 }
 dim(dat_keep)
-# [1] 75 17
+# [1] 75 21
 
 
 ## PCA original wmethod
 ## remove all NA
 dat <- sapply(data, as.numeric)
 na.omit(dat) %>% dim
-# [1] 93 17
+# [1] 93 21
 
 row.names(dat) <- row.names(data)
 res <- prcomp(na.omit(dat), center = T, scale = T) ## no NA allowed, 89 subjects left
@@ -157,7 +161,8 @@ pca_sign # the first 2 PCs are significant
 
 # export PCs
 # write.csv(res$x, file = "../data/var19_pca.csv", quote = F)
-write.csv(res$x, file = "../data/var17_pca.csv", quote = F)
+# write.csv(res$x, file = "../data/var17_pca.csv", quote = F)
+write.csv(res$x, file = "../data/var21_pca.csv", quote = F)
 
 
 ## p-val
@@ -181,7 +186,7 @@ dev.off()
 
 
 png("scree_allpc.png", width = 700, height = 580)
-fviz_eig(res, ncp = 19)
+fviz_eig(res, ncp = ncol(res$x) )
 dev.off()
 
 
@@ -240,7 +245,7 @@ summary(res)
 
 
 pca_sign <- sign.pc(as.data.frame(scale(na.omit(dat), center=T, scale=T)),cor=T)
-pca_sign # the first 2 PCs are significant
+pca_sign # the first 3 PCs are significant
 
 # export PCs
 # write.csv(res$x, file = "../data/var19_imp_pca.csv", quote = F)
@@ -269,7 +274,7 @@ dev.off()
 
 
 png("scree_allpc_imp.png", width = 700, height = 580)
-fviz_eig(res, ncp = 19)
+fviz_eig(res, ncp = ncol(res$x) )
 dev.off()
 
 
@@ -329,7 +334,7 @@ summary(res)
 
 
 pca_sign <- sign.pc(as.data.frame(scale(na.omit(dat), center=T, scale=T)),cor=T)
-pca_sign # the first 2 PCs are significant
+pca_sign # the first 3 PCs are significant
 
 # export PCs
 # write.csv(res$x, file = "../data/var19_imp_pca.csv", quote = F)
@@ -361,7 +366,7 @@ dev.off()
 
 # png("scree_allpc_imp_sbj116.png", width = 700, height = 580)
 png("scree_allpc_imp_sbj126.png", width = 700, height = 580)
-fviz_eig(res, ncp = 19)
+fviz_eig(res, ncp = ncol(res$x))
 dev.off()
 
 

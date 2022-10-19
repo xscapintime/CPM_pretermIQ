@@ -50,10 +50,12 @@ tb_merge[tb_merge == -999] <- NA
 tb_merge[tb_merge == -998] <- NA
 
 
+# add srs total and seperate values
 vars <- c("AP_ID", "Eprime_ID", "group", "sex", "age22", "age4", "age8",
-        "WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-tot", #"srs-rrb", "srs-sci", ## AP_marking_JULY, 8 yo
+        "WISC_VCI_CS", "WISC_PR_CS", "WISC_WM_CS", "WISC_PS_CS", "srs-tot", "srs-rrb", "srs-sci", ## AP_marking_JULY, 8 yo
         "bayley22_cog_comp", "bayley22_language_comp", "bayley22_motor_comp", "parca22_cognitive", "parca22_language",
-        "wppsi4_verb_compr_raw", "wppsi4_visuo_sp_raw", "wppsi4_fluid_res_raw", "wppsi4_working_mem_raw", "wppsi4_proc_speed_raw", "srs4_sum_subscales", #"srs4_rrb_raw", "srs4_sci_raw",
+        "wppsi4_verb_compr_raw", "wppsi4_visuo_sp_raw", "wppsi4_fluid_res_raw", "wppsi4_working_mem_raw", "wppsi4_proc_speed_raw",
+        "srs4_sum_subscales", "srs4_rrb_raw", "srs4_sci_raw",
         "MC_COUNT_TOTAL_FAILS_nooffails")
 
 
@@ -108,28 +110,29 @@ dat_fin$WISC_PS_CS <- dat_fin$WISC_PS_CS %>% as.numeric()
 
 
 ## ">90" --> 90
-# dat_fin$`srs-rrb`[!grepl("^\\d+", dat_fin$`srs-rrb`)][!dat_fin$`srs-rrb`[!grepl("^\\d+$", dat_fin$`srs-rrb`)] %>% is.na()] <- "90"
-# dat_fin$`srs-sci`[!grepl("^\\d+", dat_fin$`srs-sci`)][!dat_fin$`srs-sci`[!grepl("^\\d+$", dat_fin$`srs-sci`)] %>% is.na()] <- "90"
-# dat_fin[, c("srs-rrb", "srs-sci")] <- sapply(dat_fin[, c("srs-rrb", "srs-sci")], as.numeric)
-
-
-dat_fin$`srs-tot`
+dat_fin$`srs-rrb`[!grepl("^\\d+", dat_fin$`srs-rrb`)][!dat_fin$`srs-rrb`[!grepl("^\\d+$", dat_fin$`srs-rrb`)] %>% is.na()] <- "90"
+dat_fin$`srs-sci`[!grepl("^\\d+", dat_fin$`srs-sci`)][!dat_fin$`srs-sci`[!grepl("^\\d+$", dat_fin$`srs-sci`)] %>% is.na()] <- "90"
 dat_fin$`srs-tot`[!grepl("^\\d+", dat_fin$`srs-tot`)][!dat_fin$`srs-tot`[!grepl("^\\d+$", dat_fin$`srs-tot`)] %>% is.na()] <- "90"
 
-dat_fin[, c("srs-tot")] <- sapply(dat_fin[, c("srs-tot")], as.numeric)
+dat_fin[, c("srs-tot", "srs-rrb", "srs-sci")] <- sapply(dat_fin[, c("srs-tot", "srs-rrb", "srs-sci")], as.numeric)
+
 
 str(dat_fin)
 
 
 # change colnames
-colnames(dat_fin)[8:24] <- c("WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo", "SRS Total 8yo",
+colnames(dat_fin)[8:28] <- c("WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo",
+        "SRS Total 8yo", "SRS RRB 8yo", "SRS SCI 8yo",
         "Bayley Cog 22mo", "Bayley Lang 22mo", "Bayley Motor 22mo", "PARCA Cog 22mo", "PARCA Lang 22mo",
-        "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo", "SRS Total 4yo",
+        "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo",
+        "SRS Total 4yo", "SRS RRB 4yo", "SRS SCI 4yo",
         "MCHAT Fails 22mo")
 
 
-dat_fin <- dat_fin[,c(colnames(dat)[1:7], "WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo", "SRS Total 8yo",
-        "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo", "SRS Total 4yo",
+dat_fin <- dat_fin[,c(colnames(dat)[1:7], "WISC VC 8yo", "WISC PR 8yo", "WISC WM 8yo", "WISC PS 8yo",
+        "SRS Total 8yo", "SRS RRB 8yo", "SRS SCI 8yo",
+        "WPPSI VC 4yo", "WPPSI VS 4yo", "WPPSI FR 4yo", "WPPSI WM 4yo", "WPPSI PS 4yo",
+        "SRS Total 4yo", "SRS RRB 4yo", "SRS SCI 4yo",
         "Bayley Cog 22mo", "Bayley Lang 22mo", "Bayley Motor 22mo", "PARCA Cog 22mo", "PARCA Lang 22mo", "MCHAT Fails 22mo")] 
 
 

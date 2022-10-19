@@ -1,5 +1,6 @@
 rm(list = ls())
 setwd("/mnt/d/PROJECTS/preterm_language/pca_with_externaltest")
+# and only 8 yo vars
 
 library(readxl)
 library(tidyverse)
@@ -37,13 +38,13 @@ row.names(dat_fin) <- dat_fin$AP_ID
 # only keep PT
 dat_fin <- dat_fin %>% filter(group == "PT")
 dim(dat_fin)
-# [1] 126  24
+# [1] 126  28
 
 # tidy colnams
 colnames(dat_fin) <- gsub(".", " ", colnames(dat_fin), fixed = TRUE)
 
-## only keep 9 yo data
-dat_fin <- dat_fin[,c(1,2,3,4,7,8,9,10,11,12,13)]
+## only keep 8 yo data
+dat_fin <- dat_fin[,c(1,2,3,4,7,8,9,10,11,13,14)] # srs rrb and sci
 
 
 # column as variables
@@ -57,9 +58,12 @@ data <- dat_fin[,-c(1:5)]
 dim(data)
 # [1] 126 6
 colnames(data)                          
-# [1] "WISC VC 8yo"     "WISC PR 8yo"    
-# [3] "WISC WM 8yo"     "WISC PS 8yo"    
-# [5] "SRS Total 8yo"   "MCHAT Fails 8yo"
+# [1] "WISC VC 8yo"
+# [2] "WISC PR 8yo"
+# [3] "WISC WM 8yo"
+# [4] "WISC PS 8yo"
+# [5] "SRS RRB 8yo"
+# [6] "SRS SCI 8yo"
 
 
 ## match with subj with FC
@@ -82,7 +86,6 @@ for (i in 1:(ncol(dat_fc))) {
 
 # [1] "WISC PS 8yo: 1, 0.01"
 # [1] "SRS Total 8yo: 4, 0.05"
-# [1] "MCHAT Fails 8yo: 1, 0.01"
 
 
 ## check subjs that with a lot NAs
@@ -92,11 +95,10 @@ for (i in 1:(nrow(dat_fc))) {
   }
 }
 
-# [1] "AP010: 1"
-# [1] "AP011: 1"
-# [1] "BIPP002: 1"
-# [1] "BIPP003: 1"
-# [1] "BIPP017: 1"
+# [1] "AP010: 2"
+# [1] "AP011: 2"
+# [1] "BIPP002: 2"
+# [1] "BIPP003: 2"
 # [1] "BIPP021: 1"
 
 
@@ -110,14 +112,14 @@ for (i in 1:(ncol(dat_keep))) {
 
 }
 dim(dat_keep)
-# [1] 75 6
+# [1] 82 6
 
 
 ## PCA original wmethod
 ## remove all NA
 dat <- sapply(data, as.numeric)
 na.omit(dat) %>% dim
-# [1] 107 6
+# [1] 113 6
 
 row.names(dat) <- row.names(data)
 res <- prcomp(na.omit(dat), center = T, scale = T) ## no NA allowed, 89 subjects left
@@ -136,7 +138,7 @@ summary(res)
 
 
 pca_sign <- sign.pc(as.data.frame(scale(na.omit(dat), center=T, scale=T)),cor=T)
-pca_sign # the first 1 PC is significant
+pca_sign # the first 2 PC is significant
 
 # export PCs
 # write.csv(res$x, file = "../data/var19_pca.csv", quote = F)
@@ -163,9 +165,9 @@ fviz_eig(res)
 dev.off()
 
 
-png("scree_allpc.png", width = 700, height = 580)
-fviz_eig(res, ncp = 19)
-dev.off()
+# png("scree_allpc.png", width = 700, height = 580)
+# fviz_eig(res, ncp = 19)
+# dev.off()
 
 
 
@@ -200,6 +202,7 @@ names(check_na[check_na[,1] != 0,])
 knn <- kNN(dat_keep, variable = names(check_na[check_na[,1] != 0,]), k=3, imp_var=F)
 row.names(knn) <- row.names(dat_keep)
 dim(knn)
+# [1] 82  6
 
 # export imputed vars
 write.csv(knn, file = "../data/vars_8yo_82subj_imputed.csv", quote = F)
@@ -223,11 +226,11 @@ summary(res)
 
 
 pca_sign <- sign.pc(as.data.frame(scale(na.omit(dat), center=T, scale=T)),cor=T)
-pca_sign # the first 1 PC is significant
+pca_sign # the first 2 PC is significant
 
 # export PCs
 # write.csv(res$x, file = "../data/var19_imp_pca.csv", quote = F)
-write.csv(res$x, file = "../data/var17_8yo_sbj82_imp_pca.csv", quote = F)
+write.csv(res$x, file = "../data/var6_8yo_sbj82_imp_pca.csv", quote = F)
 
 
 
@@ -251,9 +254,9 @@ fviz_eig(res)
 dev.off()
 
 
-png("scree_allpc_imp.png", width = 700, height = 580)
-fviz_eig(res, ncp = 19)
-dev.off()
+# png("scree_allpc_imp.png", width = 700, height = 580)
+# fviz_eig(res, ncp = 19)
+# dev.off()
 
 
 
@@ -288,6 +291,7 @@ names(check_na[check_na[,1] != 0,])
 knn <- kNN(data, variable = names(check_na[check_na[,1] != 0,]), k=3, imp_var=F)
 row.names(knn) <- row.names(data)
 dim(knn)
+# [1] 126   6
 
 # export imputed vars
 # write.csv(knn, file = "../data/vars_116subj_imputed.csv", quote = F)
@@ -312,7 +316,7 @@ summary(res)
 
 
 pca_sign <- sign.pc(as.data.frame(scale(na.omit(dat), center=T, scale=T)),cor=T)
-pca_sign # the first 1 PC is significant
+pca_sign # the first 2 PC is significant
 
 # export PCs
 # write.csv(res$x, file = "../data/var19_imp_pca.csv", quote = F)
@@ -343,9 +347,9 @@ dev.off()
 
 
 # png("scree_allpc_imp_sbj116.png", width = 700, height = 580)
-png("scree_allpc_imp_sbj126.png", width = 700, height = 580)
-fviz_eig(res, ncp = 19)
-dev.off()
+# png("scree_allpc_imp_sbj126.png", width = 700, height = 580)
+# fviz_eig(res, ncp = 19)
+# dev.off()
 
 
 
