@@ -5,55 +5,43 @@ setwd("/mnt/d/PROJECTS/preterm_language/qc")
 
 #### load libraries  ####
 library(dplyr)
-# plots
-library(readxl)
-library(seqinr)       # col2alpha
-library(ggplot2)
-library(hexbin)
-library(RColorBrewer) # brewer.pal
+# library(readxl)
+# library(seqinr)       # col2alpha
+# library(ggplot2)
+# library(hexbin)
+# library(RColorBrewer) # brewer.pal
 # stats / modelling
 library(matrixStats)  # colMaxs
-library(psych)        # fisherz
-library(nlme)         # lme
-library(mgcv)         # gam(m)
-library(vows)         # bs = "bq"
-library(AICcmodavg)   # ?
-library(MuMIn)        # r.squaredGLMM
-#functions
-source("rp.main.R")
+# library(psych)        # fisherz
+# library(nlme)         # lme
+# library(mgcv)         # gam(m)
+# library(vows)         # bs = "bq"
+# library(AICcmodavg)   # ?
+# library(MuMIn)        # r.squaredGLMM
+# #functions
+# source("rp.main.R")
 
 
 #### path to save plots ####
-plot.path = "./plots/"
+plot.path <- "./plots/"
 
 # #### demographic information - age, sex etc. (as vectors of length ns) ####
 #### merged var from differnet spreadsheets ####
-stats <- read.csv("../data/id_vars_fin.csv")
+#stats <- read.csv("../data/id_vars_fin.csv")
+stats <- read.csv("../data/vars_wisc_srs_8yo.csv")
 stats <- stats[!is.na(stats$AP_ID),]
 row.names(stats) <- stats$AP_ID
 
 # only keep PT
 stats <- stats %>% filter(group == "PT")
 dim(stats)
-# [1] 126  24
-
-# ID list
-# id <- read_excel("../data/For Liyang - IDs resting state preprocessed.xlsx") ## AP ID
-# stats <- read_excel("../data/ePrime_BIPP_master_file_GEORGE_LHv4 correct tmcq.xlsx")
-
-## updated sheets
-## can add vars later
-# id <-  read_excel("../data/LH scanning database AP EAP BIPP.xlsx", sheet = "AP and BIPP QC_final", skip = 5)
-# id <- id$AP_ID[grepl("AP|BIPP", id$AP_ID)]
-
-# stats <- read_excel("../data/AP_marking_JULY 2022.xlsx", sheet = "Master", skip=1)
-
-# stats <- stats %>% filter(AP_ID %in% id)
-
+# [1] 132 10
+######## 132 PT subjects with outcomes/variables (NAs included) ######
 
 
 #### framewise displacement - get from fmriprep .tsv file ####
-fd.path = "../data/framwise_displacement/"
+### to check which subjects have maching fmri data ###
+fd.path <- "../data/framwise_displacement/"
 
 ## get id
 all_files <- list.files(fd.path, pattern = "_framwise_displacement.tsv")
@@ -64,13 +52,14 @@ id <- id[id %in% stats$AP_ID]
 
 files <- paste0("sub-", id, "_framwise_displacement.tsv")
 length(files)
-# [1] 87
-# [1] 94
+# [1] 100
+###### 100 PT subjects with fmri data ######
+
 
 #### set nt and ns ####
 # not used
-nt = 400 #number of time series
-ns = length(files) #number of subjects
+nt <- 400 #number of time series
+ns <- length(files) #number of subjects
 
 # fd <- matrix(NA, nrow=nt-1, ncol=ns)
 # for (i in 1:ns) {
@@ -80,29 +69,35 @@ ns = length(files) #number of subjects
 #  }
 # }
 
+# check subjects with incorrect number of framewise diepalcement
+# exclude them
 data <- lapply(files, function(file) {
   read.csv(paste0(fd.path, file), stringsAsFactors = FALSE, sep = " ", header = F)})
 
 wronglen <- unlist(lapply(data, nrow)) == 399
 
 ## which subj
-id[!wronglen]                     
+id[!wronglen]
 # [1] "AP049" "AP067"
-
 data_keep <- data[wronglen]
 
+# merge all time series to one dataframe
 fd <- Reduce(cbind, data_keep)
 
 
 dim(fd) # col = subjects
+# [1] 399  98
+### 2 subjects were filtered ###
+
 colnames(fd) <- id[wronglen]
+
 
 # omit na column
 # no NA
 fd <- t(na.omit(t(fd)))
 dim(fd)
-# [1] 399 85
-# [1] 399  92
+# [1] 399  98
+
 
 #fd = array(NA,dim=c(nt-1,ns))
 #for (i in 1:ns) {
@@ -111,6 +106,9 @@ dim(fd)
 fd.m <- colMeans(fd)   # mean fd for each subject
 fd.max <- colMaxs(fd)  # max fd
 names(fd.max) <- colnames(fd)
+
+fivenum(fd.m)
+fivenum(fd.max)
 
 # ns = dim(fd)[2] # number of subjects
 # nt = dim(fd)[1] + 1 ## 400 in this case
@@ -145,22 +143,21 @@ FD_df <- cbind(fd.m, fd.max) %>% as.data.frame()
 
 toexclu <- unique(c(which(fd.m >= mean_cutoff), which(fd.max >= max_cutoff)))
 toexclu
-# [1]  8  9 33 38 48 49 60 11 82
+# [1]  9 10 37 42 53 54 65 12 87
 
-row.names(FD_df)[toexclu]         
+row.names(FD_df)[toexclu]
 # [1] "AP014"   "AP015"   "AP060"  
 # [4] "AP069"   "AP111"   "AP112"  
 # [7] "AP131"   "AP018"   "BIPP033"
 
 
 #so now we exlclude IDs
-#we exlclude 2 IDs - fd exclusions
+#we exlclude 9 IDs - fd exclusions
 
 #### data frame after FD
 FD_df_after_exclusions <- FD_df[-toexclu,]
 dim(FD_df_after_exclusions)
-# [1] 76   2
-# [1] 83  2
+# [1] 89  2
 
 #### histograms AFTER FD exclusions (limits require manual adjustment) ####
 # mean fd
@@ -185,4 +182,4 @@ FD_df_after_exclusions <- FD_df_after_exclusions[, -1]
 
 ## save 
 save(FD_df_after_exclusions, file = "FD_df_after_exclusions.RData")
-save.image("1.cutoff_fd.RData")
+#save.image("1.cutoff_fd.RData")
