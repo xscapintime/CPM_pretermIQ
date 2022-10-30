@@ -663,9 +663,9 @@ def cpm_wrapper_seed_part(all_fc_data, all_behav_data, behav, cova_data, covar, 
     return behav_obs_pred, all_masks, corr
 
 
-#### combine all feature selection functiom into one ####
-def cpm_wrapper_seed_all(all_fc_data, all_behav_data, behav, k=10, seed=202208,\
-    corr_type='pearson', cova_data, covar, **cpm_kwargs):
+
+##### samping with seed and robust regression
+def cpm_wrapper_seed_robust(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cpm_kwargs):
     
     assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
 
@@ -690,22 +690,84 @@ def cpm_wrapper_seed_all(all_fc_data, all_behav_data, behav, k=10, seed=202208,\
         print("doing fold {}".format(fold))
         train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
         train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
-        
-        if corr_type == 'pearson' or 'spearman':
-            mask_dict, corr = select_features(train_vcts, train_behav, **cpm_kwargs)
-        elif corr_type == 'partial':
-            train_cova = get_train_test_cova(train_subs, test_subs, cova_data)
-            mask_dict, corr = select_features_part(train_vcts, train_behav, behav, train_cova, covar, pcorr_type='pearson', **cpm_kwargs)
-        elif corr_type == 'robust':
-            mask_dict, corr = select_features_robust(train_vcts, train_behav, **cpm_kwargs)
-            
+        mask_dict, corr = select_features_robust(train_vcts, train_behav, **cpm_kwargs)
         all_masks["pos"][fold,:] = mask_dict["pos"]
         all_masks["neg"][fold,:] = mask_dict["neg"]
         model_dict = build_model(train_vcts, mask_dict, train_behav)
         behav_pred = apply_model(test_vcts, mask_dict, model_dict)
         for tail, predictions in behav_pred.items():
-             behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
+            behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
             
+    behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
+    
+    return behav_obs_pred, all_masks, corr
+
+
+
+
+
+
+### combine all feature selection functiom into one ####
+def cpm_wrapper_seed_all(all_fc_data, all_behav_data, behav, k=10, seed=202208, fscorr_type='pearson', **cpm_kwargs):
+    """
+    Pearson, Spearman or robust regression.
+    No partial correlaiton.
+    """
+    
+    assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
+
+    subj_list = all_fc_data.index # get subj_list from df index
+    
+    indices = mk_kfold_indices_seed(subj_list, k=k, seed=seed)
+    
+    # Initialize df for storing observed and predicted behavior
+    col_list = []
+    for tail in ["pos", "neg", "glm"]:
+        col_list.append(behav + " predicted (" + tail + ")")
+    col_list.append(behav + " observed")
+    behav_obs_pred = pd.DataFrame(index=subj_list, columns = col_list)
+    
+    # Initialize array for storing feature masks
+    n_edges = all_fc_data.shape[1]
+    all_masks = {}
+    all_masks["pos"] = np.zeros((k, n_edges))
+    all_masks["neg"] = np.zeros((k, n_edges))
+    
+    if fscorr_type == 'pearson' or 'spearman':
+        corr_type = fscorr_type
+        for fold in range(k):
+            print("doing fold {}".format(fold))
+            train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
+            train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
+            mask_dict, corr = select_features(train_vcts, train_behav, corr_type=corr_type, **cpm_kwargs)
+            all_masks["pos"][fold,:] = mask_dict["pos"]
+            all_masks["neg"][fold,:] = mask_dict["neg"]
+
+            model_dict = build_model(train_vcts, mask_dict, train_behav)
+            behav_pred = apply_model(test_vcts, mask_dict, model_dict)
+            
+            for tail, predictions in behav_pred.items():
+                behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions   
+    
+    elif fscorr_type == 'robust':
+        corr_type = fscorr_type
+        for fold in range(k):
+            print("doing fold {}".format(fold))
+            train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
+            train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
+            mask_dict, corr = select_features_robust(train_vcts, train_behav, corr_type = fscorr_type, **cpm_kwargs)
+            
+            all_masks["pos"][fold,:] = mask_dict["pos"]
+            all_masks["neg"][fold,:] = mask_dict["neg"]
+            model_dict = build_model(train_vcts, mask_dict, train_behav)
+            behav_pred = apply_model(test_vcts, mask_dict, model_dict)
+            for tail, predictions in behav_pred.items():
+                 behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
+            
+    # elif corr_type == 'partial':
+        # train_cova = get_train_test_cova(train_subs, test_subs, cova_data)
+        # mask_dict, corr = select_features_part(train_vcts, train_behav, behav, train_cova, covar, pcorr_type='pearson', **cpm_kwargs)
+    
     behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
     
     return behav_obs_pred, all_masks, corr
