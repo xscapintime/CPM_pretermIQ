@@ -11,3 +11,5 @@
 *.zip
 *.npy
 *.html
+
+__pycache__/
