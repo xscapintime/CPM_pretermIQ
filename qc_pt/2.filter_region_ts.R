@@ -1,9 +1,10 @@
 #### =========== load time series =========== ####
 ### filtering subjects out by their mising regions
 rm(list = ls())
-setwd("/mnt/d/PROJECTS/preterm_language/qc")
+setwd("/mnt/d/PROJECTS/preterm_language/qc_pt")
 
 library(dplyr)
+library(VIM)
 # plots
 # library(readxl)
 # library(seqinr)       # col2alpha
@@ -44,10 +45,10 @@ data <- lapply(files, function(file) {
   read.table(paste0(ts.path, file), stringsAsFactors = FALSE, sep = "", header = T)[, -c(1:2)]})
 names(data) <- str_split(files, "_", simplify = T)[, 1]
 
-wrong_dimen <- (unlist(lapply(data, nrow)) != 400 & unlist(lapply(data, ncol)) != 376)
+wrong_dimen <- (unlist(lapply(data, nrow)) == 400 & unlist(lapply(data, ncol)) == 376)
 
 # which subjects have incorrect dimensions
-names(data)[wrong_dimen]
+names(data)[!wrong_dimen]
 # [1] "sub-AP068" "sub-AP099" "sub-AP132"
 
 
@@ -124,6 +125,39 @@ save(ts_final, file = "ts_final.RData")
 save(df_final, file = "df_final.RData")
 write.table(df_final, "../data/pt_vars_fd.txt", quote = F)
 #save.image("2.filter_region_ts.RData")
+
+
+## KNN imputation to fill the NAs
+# check which subjs has NAs
+for (i in 1:(nrow(df_final))) {
+  if (is.na(df_final[i,]) %>% sum() != 0) {
+    print(paste0(row.names(df_final)[i], ": ", is.na(df_final[i,]) %>% sum()))
+  }
+}
+# [1] "AP010: 2"
+# [1] "AP011: 2"
+# [1] "BIPP002: 2"
+# [1] "BIPP003: 2"
+# [1] "BIPP021: 2"
+
+check_na <- cbind(
+   lapply(
+     lapply(df_final, is.na)
+     , sum)
+)
+names(check_na[check_na[,1] != 0,])  
+# [1] "WISC_FULL_CS" "WISC_PS_CS"   "srs.rrb"     
+# [4] "srs.sci" 
+
+# KNN
+knn <- kNN(df_final, variable = names(check_na[check_na[,1] != 0,]), k=5, imp_var=F)
+row.names(knn) <- row.names(df_final)
+dim(knn)
+
+# export
+write.table(knn, "../data/pt_vars_fd_imp.txt", quote = F)
+
+
 
 
 # # verify dimensions of text files
