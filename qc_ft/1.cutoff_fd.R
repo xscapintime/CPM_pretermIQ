@@ -1,26 +1,25 @@
 ### ============ filtering subjects ================= ###
 ### delete subjects with outliner mean/max FD value
 rm(list = ls())
-# setwd("/mnt/d/PROJECTS/preterm_language/qc")
+setwd("/mnt/d/PROJECTS/preterm_language/qc_ft")
 
 #### load libraries  ####
 library(dplyr)
-# plots
-library(readxl)
-library(seqinr)       # col2alpha
-library(ggplot2)
-library(hexbin)
-library(RColorBrewer) # brewer.pal
+# library(readxl)
+# library(seqinr)       # col2alpha
+# library(ggplot2)
+# library(hexbin)
+# library(RColorBrewer) # brewer.pal
 # stats / modelling
 library(matrixStats)  # colMaxs
-library(psych)        # fisherz
-library(nlme)         # lme
-library(mgcv)         # gam(m)
-library(vows)         # bs = "bq"
-library(AICcmodavg)   # ?
-library(MuMIn)        # r.squaredGLMM
-#functions
-source("rp.main.R")
+# library(psych)        # fisherz
+# library(nlme)         # lme
+# library(mgcv)         # gam(m)
+# library(vows)         # bs = "bq"
+# library(AICcmodavg)   # ?
+# library(MuMIn)        # r.squaredGLMM
+# #functions
+# source("rp.main.R")
 
 
 #### path to save plots ####
@@ -28,19 +27,21 @@ plot.path <- "./plots/"
 
 # #### demographic information - age, sex etc. (as vectors of length ns) ####
 #### merged var from differnet spreadsheets ####
-stats <- read.csv("../data/fulliq_8yo.csv")
+#stats <- read.csv("../data/id_vars_fin.csv")
+stats <- read.csv("../data/vars_wisc_srs_8yo.csv")
 stats <- stats[!is.na(stats$AP_ID),]
 row.names(stats) <- stats$AP_ID
 
-# FT
+# only keep FT
 stats <- stats %>% filter(group == "FT")
 dim(stats)
-# [1] 54  11
-
+# [1] 56 10
+######## 56 FT subjects with outcomes/variables (NAs included) ######
 
 
 #### framewise displacement - get from fmriprep .tsv file ####
-fd.path = "../data/framwise_displacement/"
+### to check which subjects have maching fmri data ###
+fd.path <- "../data/framwise_displacement/"
 
 ## get id
 all_files <- list.files(fd.path, pattern = "_framwise_displacement.tsv")
@@ -51,13 +52,14 @@ id <- id[id %in% stats$AP_ID]
 
 files <- paste0("sub-", id, "_framwise_displacement.tsv")
 length(files)
-# [1] 49
+# [1] 52
+###### 52 PT subjects with fmri data ######
 
 
 #### set nt and ns ####
 # not used
-nt = 400 #number of time series
-ns = length(files) #number of subjects
+nt <- 400 #number of time series
+ns <- length(files) #number of subjects
 
 # fd <- matrix(NA, nrow=nt-1, ncol=ns)
 # for (i in 1:ns) {
@@ -67,6 +69,8 @@ ns = length(files) #number of subjects
 #  }
 # }
 
+# check subjects with incorrect number of framewise diepalcement
+# exclude them
 data <- lapply(files, function(file) {
   read.csv(paste0(fd.path, file), stringsAsFactors = FALSE, sep = " ", header = F)})
 
@@ -75,20 +79,24 @@ wronglen <- unlist(lapply(data, nrow)) == 399
 ## which subj
 id[!wronglen]
 # [1] "AP083"
-
 data_keep <- data[wronglen]
 
+# merge all time series to one dataframe
 fd <- Reduce(cbind, data_keep)
 
 
 dim(fd) # col = subjects
+# [1] 399  51
+### 1 subjects were filtered ###
+
 colnames(fd) <- id[wronglen]
+
 
 # omit na column
 # no NA
 fd <- t(na.omit(t(fd)))
 dim(fd)
-# [1] 399 48
+# [1] 399  51
 
 
 #fd = array(NA,dim=c(nt-1,ns))
@@ -98,6 +106,9 @@ dim(fd)
 fd.m <- colMeans(fd)   # mean fd for each subject
 fd.max <- colMaxs(fd)  # max fd
 names(fd.max) <- colnames(fd)
+
+fivenum(fd.m)
+fivenum(fd.max)
 
 # ns = dim(fd)[2] # number of subjects
 # nt = dim(fd)[1] + 1 ## 400 in this case
@@ -132,19 +143,21 @@ FD_df <- cbind(fd.m, fd.max) %>% as.data.frame()
 
 toexclu <- unique(c(which(fd.m >= mean_cutoff), which(fd.max >= max_cutoff)))
 toexclu
-# [1]  9 32 20 22 34
+# [1]  7 28 16 18 30
 
-row.names(FD_df)[toexclu]         
-# [1] "AP028" "AP091" "AP074" "AP076" "AP093"
+row.names(FD_df)[toexclu]
+# [1] "AP028" "AP091" "AP074" "AP076"
+# [5] "AP093"
+
 
 
 #so now we exlclude IDs
-#we exlclude 2 IDs - fd exclusions
+#we exlclude 9 IDs - fd exclusions
 
 #### data frame after FD
 FD_df_after_exclusions <- FD_df[-toexclu,]
 dim(FD_df_after_exclusions)
-# [1] 43  2
+# [1] 46  2
 
 #### histograms AFTER FD exclusions (limits require manual adjustment) ####
 # mean fd
@@ -169,4 +182,4 @@ FD_df_after_exclusions <- FD_df_after_exclusions[, -1]
 
 ## save 
 save(FD_df_after_exclusions, file = "FD_df_after_exclusions.RData")
-# save.image("1.cutoff_fd.RData")
+#save.image("1.cutoff_fd.RData")

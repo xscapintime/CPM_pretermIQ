@@ -1,51 +1,51 @@
 #### ======= loop to create fc ========= ####
 rm(list = ls())
-# setwd("/mnt/d/PROJECTS/preterm_language/qc")
+setwd("/mnt/d/PROJECTS/preterm_language/qc_ft")
 
 library(dplyr)
 # plots
-library(readxl)
-library(seqinr)       # col2alpha
-library(ggplot2)
-library(hexbin)
-library(RColorBrewer) # brewer.pal
-# stats / modelling
-library(matrixStats)  # colMaxs
+# library(readxl)
+# library(seqinr)       # col2alpha
+# library(ggplot2)
+# library(hexbin)
+# library(RColorBrewer) # brewer.pal
+# # stats / modelling
+# library(matrixStats)  # colMaxs
 library(psych)        # fisherz
-library(nlme)         # lme
-library(mgcv)         # gam(m)
-library(vows)         # bs = 'bq'
-library(AICcmodavg)   # ?
-library(MuMIn)        # r.squaredGLMM
-library(stringr)
+# library(nlme)         # lme
+# library(mgcv)         # gam(m)
+# library(vows)         # bs = 'bq'
+# library(AICcmodavg)   # ?
+# library(MuMIn)        # r.squaredGLMM
+# library(stringr)
 #functions
 source('rp.main.R')
 
 #### path to save plots ####
-plot.path = "./plots/"
+plot.path <- "./plots/"
 
 
-# load ts.final, df_final
-load("ts.final.RData")
+# load ts_final, df_final
+load("ts_final.RData")
 load("df_final.RData")
 
 
 # create fc
-nroi.f = dim(ts.final)[2]  ## 374, regions #new number of rois -previous nroi (initial) = nroi
-ns.f = dim(ts.final)[3] ## 82, subjects
+nroi.f <- dim(ts_final)[2]  ## 374, regions #new number of rois -previous nroi (initial) = nroi
+ns.f <- dim(ts_final)[3] ## 45, subjects
 
 fc.raw = array(NA,dim=c(nroi.f,nroi.f,ns.f))  # raw FC - before fisher transformation
 for (i in 1:ns.f) {
   if (i%%10==0) print(i)
-  fc.raw[,,i] = cor(ts.final[,,i])
+  fc.raw[,,i] = cor(ts_final[,,i])
 }
 dim(fc.raw)
-# [1] 374 374 42
+# [1] 374 374 45
 
 # fisher transform correlations
-fc = fisherz(fc.raw)
+fc <- fisherz(fc.raw)
 dim(fc)
-# [1] 374 374 42
+# [1] 374 374 45
 
 
 ## save as individual matrices for python CPM
@@ -88,9 +88,9 @@ save(fc, file = "fc.RData")
 
 #set up density plot parameters
 # indices of upper triangular part of matrix
-triup = upper.tri(matrix(nrow=nroi.f,ncol=nroi.f))
+triup <- upper.tri(matrix(nrow=nroi.f,ncol=nroi.f))
 
 # mean FC
-fc.m_final = vector(length=ns.f)
-for (n in 1:ns.f) fc.m_final[n] = mean(fc[,,n][triup],na.rm=T)
+fc.m_final <- vector(length=ns.f)
+for (n in 1:ns.f) fc.m_final[n] <- mean(fc[,,n][triup],na.rm=T)
 save(fc.m_final, file = "fc.m_final.RData")
