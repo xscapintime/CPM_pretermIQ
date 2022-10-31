@@ -56,7 +56,7 @@ condition = 'fc' ## actually no need, should be something like REST or EMO to di
 all_fc_data = read_in_matrices(subj_list, file_suffix=condition, data_dir=Path(path))
 print(all_fc_data.shape) # edge number = n_nodes*(n_nodes-1)/2, 69751 in this case
 # (40, 69751)
-fc_data = all_fc_data.copy()
+# fc_data = all_fc_data.copy()
 
 ## viz edges
 coords = pd.read_csv("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", index_col=None, header=None, sep=" ")
@@ -66,13 +66,13 @@ print(coords.shape)
 cpm_kwargs = {'r_thresh': 0.38, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
 
 ### k as number of subjects, LOOCV
-k = fc_data.shape[0]
+k = all_fc_data.shape[0]
 corr_type = 'pearson'
 
 for behav in behav_data.columns[:7]:
     print(behav)
 
-    behav_obs_pred, all_masks, corr = cpm_wrapper_seed(fc_data, behav_data, behav=behav, k=k, seed=202210, **cpm_kwargs)
+    behav_obs_pred, all_masks, corr = cpm_wrapper_seed(all_fc_data, behav_data, behav=behav, k=k, seed=202210, **cpm_kwargs)
     ## count selected edges
     print('{:.2f} pos edges passed the threshold at all folds: '.format(((all_masks['pos'].sum(axis=0)/k) >= 1).sum()))
     print('{:.2f} neg edges passed the threshold at all folds: '.format(((all_masks['neg'].sum(axis=0)/k) >= 1).sum()))

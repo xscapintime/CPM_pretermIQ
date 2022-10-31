@@ -56,7 +56,7 @@ condition = 'fc' ## actually no need, should be something like REST or EMO to di
 all_fc_data = read_in_matrices(subj_list, file_suffix=condition, data_dir=Path(path))
 print(all_fc_data.shape) # edge number = n_nodes*(n_nodes-1)/2, 69751 in this case
 # (40, 69751)
-fc_data = all_fc_data.copy()
+# fc_data = all_fc_data.copy()
 
 ## viz edges
 coords = pd.read_csv("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", index_col=None, header=None, sep=" ")
@@ -66,20 +66,20 @@ print(coords.shape)
 cpm_kwargs = {'r_thresh': 0.38, 'verbose': False} ## use spearman if the distribution is skewed
 
 ### k as number of subjects, LOOCV
-k = fc_data.shape[0]
+k = all_fc_data.shape[0]
 corr_type = 'robust'
 
 for behav in behav_data.columns[:1]:
     print(behav)
 
-    behav_obs_pred, all_masks, corr = cpm_wrapper_seed_robust(fc_data, behav_data, behav=behav, k=k, seed=202210, **cpm_kwargs)
+    behav_obs_pred, all_masks, corr = cpm_wrapper_seed_robust(all_fc_data, behav_data, behav=behav, k=k, seed=202210, **cpm_kwargs)
     ## count selected edges
     print('{:.2f} pos edges passed the threshold at all folds: '.format(((all_masks['pos'].sum(axis=0)/k) >= 1).sum()))
-    print('{:.2f} neg edges passed the threshold at all folds: '.format(((all_masks['neg'].sum(axis=0)/k) >= 1).sum()))
+    # print('{:.2f} neg edges passed the threshold at all folds: '.format(((all_masks['neg'].sum(axis=0)/k) >= 1).sum()))
     
     ## export pred table
     fn = behav + '_8yo_' + corr_type + '_fold_' + str(k) + '_pred'
-    #behav_obs_pred.to_csv(fn + '.csv')
+    behav_obs_pred.to_csv(fn + '.csv')
 
     ## plot pred vs obs
     g = plot_predictions(behav_obs_pred)
@@ -88,7 +88,7 @@ for behav in behav_data.columns[:1]:
     plt.close()
 
     ## save all_mask
-    # np.save(fn + '_all_masks.npy',  all_masks)    
+    np.save(fn + '_all_masks.npy',  all_masks)    
 
     ## edges
     for tail in all_masks.keys():
@@ -103,11 +103,11 @@ for behav in behav_data.columns[:1]:
     
         # plot edges
         # all_masks(pos/neg matrices) is a binary array, k fold * n total edges, in this case is 10,69751
-        if tail == 'pos':
-            color = 'red'
-        else:
-            color = 'blue'
-        
+        # if tail == 'pos':
+            # color = 'red'
+        # else:
+            # color = 'blue'
+        color = 'green'
         g = plot_consistent_edges(all_masks, tail, thresh = 0.8, color = color, node_coords = coords)
         plt.savefig(os.path.join('edges', edfn + '_edges.png'))
         plt.close()

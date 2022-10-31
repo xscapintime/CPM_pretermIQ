@@ -246,9 +246,10 @@ def select_features_robust(train_vcts, train_behav, r_thresh=0.2, verbose=False)
     corr = pd.Series(corr) # list bug
 
     # Define positive and negative masks
+    # no negative coef in robust regression?
     mask_dict = {}
-    mask_dict["pos"] = corr > r_thresh
-    mask_dict["neg"] = corr < -r_thresh
+    mask_dict["all"] = corr > r_thresh
+    #mask_dict["neg"] = corr < -r_thresh
     
     if verbose:
         print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
@@ -675,7 +676,7 @@ def cpm_wrapper_seed_robust(all_fc_data, all_behav_data, behav, k=10, seed=20220
     
     # Initialize df for storing observed and predicted behavior
     col_list = []
-    for tail in ["pos", "neg", "glm"]:
+    for tail in ["all", "glm"]:
         col_list.append(behav + " predicted (" + tail + ")")
     col_list.append(behav + " observed")
     behav_obs_pred = pd.DataFrame(index=subj_list, columns = col_list)
@@ -683,16 +684,16 @@ def cpm_wrapper_seed_robust(all_fc_data, all_behav_data, behav, k=10, seed=20220
     # Initialize array for storing feature masks
     n_edges = all_fc_data.shape[1]
     all_masks = {}
-    all_masks["pos"] = np.zeros((k, n_edges))
-    all_masks["neg"] = np.zeros((k, n_edges))
+    all_masks["all"] = np.zeros((k, n_edges))
+    # all_masks["neg"] = np.zeros((k, n_edges))
     
     for fold in range(k):
         print("doing fold {}".format(fold))
         train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
         train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
         mask_dict, corr = select_features_robust(train_vcts, train_behav, **cpm_kwargs)
-        all_masks["pos"][fold,:] = mask_dict["pos"]
-        all_masks["neg"][fold,:] = mask_dict["neg"]
+        all_masks["all"][fold,:] = mask_dict["all"]
+        # all_masks["neg"][fold,:] = mask_dict["neg"]
         model_dict = build_model(train_vcts, mask_dict, train_behav)
         behav_pred = apply_model(test_vcts, mask_dict, model_dict)
         for tail, predictions in behav_pred.items():
@@ -708,6 +709,7 @@ def cpm_wrapper_seed_robust(all_fc_data, all_behav_data, behav, k=10, seed=20220
 
 
 ### combine all feature selection functiom into one ####
+### need refine ####
 def cpm_wrapper_seed_all(all_fc_data, all_behav_data, behav, k=10, seed=202208, fscorr_type='pearson', **cpm_kwargs):
     """
     Pearson, Spearman or robust regression.
@@ -757,8 +759,8 @@ def cpm_wrapper_seed_all(all_fc_data, all_behav_data, behav, k=10, seed=202208, 
             train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
             mask_dict, corr = select_features_robust(train_vcts, train_behav, corr_type = fscorr_type, **cpm_kwargs)
             
-            all_masks["pos"][fold,:] = mask_dict["pos"]
-            all_masks["neg"][fold,:] = mask_dict["neg"]
+            all_masks["all"][fold,:] = mask_dict["all"]
+            # all_masks["neg"][fold,:] = mask_dict["neg"]
             model_dict = build_model(train_vcts, mask_dict, train_behav)
             behav_pred = apply_model(test_vcts, mask_dict, model_dict)
             for tail, predictions in behav_pred.items():
