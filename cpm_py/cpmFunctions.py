@@ -1,4 +1,11 @@
-#### based on https://github.com/esfinn/cpm_tutorial
+"""
+Functions for connectome-based prodctive modeling.
+Alteration based on https://github.com/esfinn/cpm_tutorial and @shenUsingConnectomebasedPredictive2017
+Added seed setting sampling.
+Added robust correlation in feature selection.
+Added partial correlaton in feature selection.
+Replaced for-loop with apply-lambda method, FASTER!!!
+"""
 
 import numpy as np
 import scipy as sp
@@ -153,22 +160,29 @@ def get_train_test_data(all_fc_data, train_subs, test_subs, behav_data, behav):
 
 
 
-def get_train_test_cova(train_subs, test_subs, cova_data):
+# def get_train_test_cova(train_subs, test_subs, cova_data):
 
-    """
-    Extracts covariates data for a list of train_subs and test_subs
-    """
-    train_cova = cova_data.loc[train_subs, :]
-    # test_cova = cova_data.loc[test_subs, :]
+#     """
+#     Extracts covariates data for a list of train_subs and test_subs
+#     """
+#     train_cova = cova_data.loc[train_subs, :]
+#     # test_cova = cova_data.loc[test_subs, :]
 
-    return (train_cova)
+#     return (train_cova)
 
 
 
+
+################################# feature selection by coeffient #################################
+#################################             PEARSON            #################################
+#################################             SPEARMAN           #################################
+#################################        ROBUST REGRESSION       #################################
 def select_features(train_vcts, train_behav, r_thresh=0.2, corr_type='pearson', verbose=False):
     
     """
     Runs the CPM feature selection step: 
+    - select edges by correlation coeffient
+    - options: pearson, spearman, robust regression
     - correlates each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
     """
 
@@ -178,43 +192,21 @@ def select_features(train_vcts, train_behav, r_thresh=0.2, corr_type='pearson', 
     if corr_type =='pearson':
         cov = np.dot(train_behav.T - train_behav.mean(), train_vcts - train_vcts.mean(axis=0)) / (train_behav.shape[0]-1)
         corr = cov / np.sqrt(np.var(train_behav, ddof=1) * np.var(train_vcts, axis=0, ddof=1))
+    
     elif corr_type =='spearman':
-        corr = []
-        for edge in train_vcts.columns:
-            r_val = sp.stats.spearmanr(train_vcts.loc[:,edge], train_behav)[0]
-            corr.append(r_val)
+        ########################## original code, too slow #######################
+        # corr = []
+        # for edge in train_vcts.columns:
+        #     r_val = sp.stats.spearmanr(train_vcts.loc[:,edge], train_behav)[0]
+        #     corr.append(r_val)
+        #########################################################################
+        corr = train_vcts.apply(lambda x : sp.stats.spearmanr(x, train_behav)[0])
+        corr = np.array(corr) # list bug
+    
+    elif corr_type == 'robust':
+        corr = train_vcts.apply(lambda x : sm.RLM(x, train_behav).fit().params[0])
         corr = np.array(corr) # list bug
 
-    # Define positive and negative masks
-    mask_dict = {}
-    mask_dict["pos"] = corr > r_thresh
-    mask_dict["neg"] = corr < -r_thresh
-    
-    if verbose:
-        print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
-
-    return mask_dict, corr
-
-
-##### feature selection func using partial correlation
-def select_features_part(train_vcts, train_behav, behav, train_cova, covar, r_thresh=0.2, pcorr_type='pearson', verbose=False):
-    
-    """
-    Runs the CPM feature selection step: 
-    - partial correlation of each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
-    """
-
-    assert train_vcts.index.equals(train_behav.index), "Row indices of FC vcts and behavior don't match!"
-
-    # Correlate all edges with behav vector
-    tmp_df = pd.concat([train_vcts, train_behav, train_cova], axis=1)
-    # tmp_df.head().pcorr() ## too big
-
-    corr = []
-    for edge in train_vcts.columns:
-        r_val = pg.partial_corr(tmp_df, x=edge, y=behav, covar=covar, method=pcorr_type)['r'][0]
-        corr.append(r_val)
-    corr = pd.Series(corr) # list bug
 
     # Define positive and negative masks
     mask_dict = {}
@@ -227,42 +219,16 @@ def select_features_part(train_vcts, train_behav, behav, train_cova, covar, r_th
     return mask_dict, corr
 
 
-##### feature selection func using robust regression
-def select_features_robust(train_vcts, train_behav, r_thresh=0.2, verbose=False):
+#################################    feature selection by p-val  #################################
+#################################             PEARSON            #################################
+#################################             SPEARMAN           #################################
+#################################        ROBUST REGRESSION       #################################
+def select_features_pval(train_vcts, train_behav, p_thresh=0.05, corr_type='pearson', verbose=False):
     
     """
     Runs the CPM feature selection step: 
-    - partial correlation of each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
-    """
-
-    assert train_vcts.index.equals(train_behav.index), "Row indices of FC vcts and behavior don't match!"
-
-    # Correlate all edges with behav vector
-    corr = []
-    for edge in train_vcts.columns:
-        r_val = sm.RLM(train_vcts.loc[:,edge], train_behav).fit().params[0]
-        # p_val = sm.RLM(train_vcts.loc[:,edge], train_behav).fit().bse[0]
-        corr.append(r_val)
-    corr = pd.Series(corr) # list bug
-
-    # Define positive and negative masks
-    # no negative coef in robust regression?
-    mask_dict = {}
-    mask_dict["all"] = corr > r_thresh
-    #mask_dict["neg"] = corr < -r_thresh
-    
-    if verbose:
-        print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
-
-    return mask_dict, corr
-
-
-
-## feature selection func with p-val ###
-def select_features_pval(train_vcts, train_behav, p_thresh=0.01, corr_type='pearson', verbose=False):
-    
-    """
-    Runs the CPM feature selection step: 
+    - select edges by p-value
+    - options: pearson, spearman, robust regression
     - correlates each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
     """
 
@@ -270,36 +236,29 @@ def select_features_pval(train_vcts, train_behav, p_thresh=0.01, corr_type='pear
 
     # Correlate all edges with behav vector
     if corr_type =='pearson':
-        # cov = np.dot(train_behav.T - train_behav.mean(), train_vcts - train_vcts.mean(axis=0)) / (train_behav.shape[0]-1)
-        # corr = cov / np.sqrt(np.var(train_behav, ddof=1) * np.var(train_vcts, axis=0, ddof=1))
-        corr = []
-        pval = []
-        for edge in train_vcts.columns:
-            r_val = sp.stats.pearsonr(train_vcts.loc[:,edge], train_behav)[0]
-            p_val = sp.stats.pearsonr(train_vcts.loc[:,edge], train_behav)[1]
-            corr.append(r_val)
-            pval.append(p_val)
-        # stat = pd.DataFrame({'corr': corr, 'pval': pval})
+        corr = train_vcts.apply(lambda x : sp.stats.pearsonr(x, train_behav)[0])
+        pval = train_vcts.apply(lambda x : sp.stats.pearsonr(x, train_behav)[1])
+
         stat = {'corr':np.array(corr), 'pval' : np.array(pval)}
 
 
     elif corr_type =='spearman':
-        corr = []
-        pval = []
-        for edge in train_vcts.columns:
-            r_val = sp.stats.spearmanr(train_vcts.loc[:,edge], train_behav)[0]
-            p_val = sp.stats.spearmanr(train_vcts.loc[:,edge], train_behav)[1]
-            corr.append(r_val)
-            pval.append(p_val)
-        # stat = pd.DataFrame({'corr': corr, 'pval': pval})
+        corr = train_vcts.apply(lambda x : sp.stats.spearmanr(x, train_behav)[0])
+        pval = train_vcts.apply(lambda x : sp.stats.spearmanr(x, train_behav)[1])
+        
+        stat = {'corr':np.array(corr), 'pval' : np.array(pval)}
+
+
+    elif corr_type == 'robust':
+        corr = train_vcts.apply(lambda x : sm.RLM(x, train_behav).fit().params[0])
+        pval = train_vcts.apply(lambda x : sm.RLM(x, train_behav).fit().bse[0])
+
         stat = {'corr':np.array(corr), 'pval' : np.array(pval)}
 
 
     # Define positive and negative masks
     mask_dict = {}
-    # mask_dict["pos"] = corr > r_thresh
-    # mask_dict["neg"] = corr < -r_thresh
-    
+
     mask_dict["pos"] = (stat['pval'] < p_thresh) & (stat['corr'] > 0)
     mask_dict["neg"] = (stat['pval'] < p_thresh) & (stat['corr'] < 0)
 
@@ -307,11 +266,109 @@ def select_features_pval(train_vcts, train_behav, p_thresh=0.01, corr_type='pear
     if verbose:
         print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
 
-    return mask_dict, corr, pval
+    return mask_dict, corr #, pval
+
+
+
+
+##################################################################################################
+#################################        PARTIAL CORRELATION     #################################
+##################################################################################################
+
+##### to make it apply-able
+def partcor_cpm(xedge, ybehav, cova_df, pcorr_type):
+    """
+    xedge: pandas series
+    ybehav: pandas series
+    cova_df: pandas dataframe
+    """
+    tmp = pd.concat([xedge, ybehav, cova_df], axis=1)
+    pg_parcorr = pg.partial_corr(tmp, x=tmp.columns[0], y=tmp.columns[1], covar=cova_df.columns, method=pcorr_type)
+    return pg_parcorr['r'][0], pg_parcorr['p-val'][0] 
+
+
+################################# feature selection by coeffient #################################
+def select_features_part(train_vcts, train_behav, covar, r_thresh=0.2, pcorr_type='pearson', verbose=False):
+    
+    """
+    Runs the CPM feature selection step: 
+    - select edges by correlation coeffient
+    - partial correlation of each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
+    """
+
+    assert train_vcts.index.equals(train_behav.index), "Row indices of FC vcts and behavior don't match!"
+
+    # Correlate all edges with behav vector
+    
+    parstats = train_vcts.apply(lambda x : partcor_cpm(xedge=x, ybehav=train_behav, cova_df=train_behav[[covar]], pcorr_type=pcorr_type))
+    corr = parstats.loc[0,:]
+    # pval = parstats.loc[1,:]
+
+    # tmp_df = pd.concat([train_vcts, train_behav, train_cova], axis=1)
+    # # tmp_df.head().pcorr() ## too big
+
+    # corr = []
+    # for edge in train_vcts.columns:
+    #     r_val = pg.partial_corr(tmp_df, x=edge, y=behav, covar=covar, method=pcorr_type)['r'][0]
+    #     corr.append(r_val)
+    # corr = pd.Series(corr) # list bug
+
+    # Define positive and negative masks
+    mask_dict = {}
+    mask_dict["pos"] = corr > r_thresh
+    mask_dict["neg"] = corr < -r_thresh
+    
+    if verbose:
+        print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
+
+    return mask_dict, corr
+
+
+#################################    feature selection by p-val  #################################
+def select_features_part_pval(train_vcts, train_behav, covar, p_thresh=0.05, pcorr_type='pearson', verbose=False):
+    
+    """
+    Runs the CPM feature selection step: 
+    - select edges by correlation coeffient
+    - partial correlation of each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
+    """
+
+    assert train_vcts.index.equals(train_behav.index), "Row indices of FC vcts and behavior don't match!"
+
+    # Correlate all edges with behav vector
+    
+    parstats = train_vcts.apply(lambda x : partcor_cpm(xedge=x, ybehav=train_behav, cova_df=train_behav[[covar]], pcorr_type=pcorr_type))
+    corr = parstats.loc[0,:]
+    pval = parstats.loc[1,:]
+    stat = {'corr':np.array(corr), 'pval' : np.array(pval)}
+
+    # tmp_df = pd.concat([train_vcts, train_behav, train_cova], axis=1)
+    # # tmp_df.head().pcorr() ## too big
+
+    # corr = []
+    # for edge in train_vcts.columns:
+    #     r_val = pg.partial_corr(tmp_df, x=edge, y=behav, covar=covar, method=pcorr_type)['r'][0]
+    #     corr.append(r_val)
+    # corr = pd.Series(corr) # list bug
+
+    # Define positive and negative masks
+    mask_dict = {}
+    mask_dict["pos"] = (stat['pval'] < p_thresh) & (stat['corr'] > 0)
+    mask_dict["neg"] = (stat['pval'] < p_thresh) & (stat['corr'] < 0)
+    
+    if verbose:
+        print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
+
+    return mask_dict, corr
+
+
+
+
 
 
 ### feature selection func, top edges ###
 ## resultes are not that different from selecting by p-val ##
+## UNREFINED ##
 def select_features_top(train_vcts, train_behav, perc_thresh=3, corr_type='pearson', verbose=False):
     
     """
@@ -362,6 +419,9 @@ def select_features_top(train_vcts, train_behav, perc_thresh=3, corr_type='pears
         print("Found ({}/{}) edges positively/negatively correlated with behavior in the training set".format(mask_dict["pos"].sum(), mask_dict["neg"].sum())) # for debugging
 
     return mask_dict, corr, pval
+
+
+
 
 
 ##### build model #####
@@ -423,8 +483,8 @@ def apply_model(test_vcts, mask_dict, model_dict):
 
 
 ###### multivariable polynomial ######
-#### not this ####
 #### unfinished ####
+#### seems can't change the linear regression part as the relationship should be liner ####
 # def build_model_cova(train_vcts, mask_dict, train_behav, train_cova, degree=2):
 #     """
 #     Builds a CPM model:
@@ -466,7 +526,7 @@ def apply_model(test_vcts, mask_dict, model_dict):
 
 
 
-# original one, r_thresh
+# use r_thresh
 def cpm_wrapper(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
     
     assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
@@ -505,7 +565,7 @@ def cpm_wrapper(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
     return behav_obs_pred, all_masks, corr
 
 
-# feature selection based on p val
+# use p_thresh
 def cpm_wrapper_pval(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
     
     assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
@@ -531,7 +591,7 @@ def cpm_wrapper_pval(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
         print("doing fold {}".format(fold))
         train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
         train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
-        mask_dict, corr, pval = select_features_pval(train_vcts, train_behav, **cpm_kwargs)
+        mask_dict, corr = select_features_pval(train_vcts, train_behav, **cpm_kwargs)
         all_masks["pos"][fold,:] = mask_dict["pos"]
         all_masks["neg"][fold,:] = mask_dict["neg"]
         model_dict = build_model(train_vcts, mask_dict, train_behav)
@@ -541,49 +601,13 @@ def cpm_wrapper_pval(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
             
     behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
     
-    return behav_obs_pred, all_masks, corr, pval # to see the selected features
+    return behav_obs_pred, all_masks, corr # to see the selected features
 
 
-### alternative feature selection. based on how strong the edges are
-def cpm_wrapper_alt(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
-    
-    assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
-
-    subj_list = all_fc_data.index # get subj_list from df index
-    
-    indices = mk_kfold_indices(subj_list, k=k)
-    
-    # Initialize df for storing observed and predicted behavior
-    col_list = []
-    for tail in ["pos", "neg", "glm"]:
-        col_list.append(behav + " predicted (" + tail + ")")
-    col_list.append(behav + " observed")
-    behav_obs_pred = pd.DataFrame(index=subj_list, columns = col_list)
-    
-    # Initialize array for storing feature masks
-    n_edges = all_fc_data.shape[1]
-    all_masks = {}
-    all_masks["pos"] = np.zeros((k, n_edges))
-    all_masks["neg"] = np.zeros((k, n_edges))
-    
-    for fold in range(k):
-        print("doing fold {}".format(fold))
-        train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
-        train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
-        mask_dict, corr, pval = select_features_top(train_vcts, train_behav, **cpm_kwargs)
-        all_masks["pos"][fold,:] = mask_dict["pos"]
-        all_masks["neg"][fold,:] = mask_dict["neg"]
-        model_dict = build_model(train_vcts, mask_dict, train_behav)
-        behav_pred = apply_model(test_vcts, mask_dict, model_dict)
-        for tail, predictions in behav_pred.items():
-            behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
-            
-    behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
-    
-    return behav_obs_pred, all_masks, corr, pval # to see the selected features
 
 
 ## samping with seed
+## use r_thresh
 def cpm_wrapper_seed(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cpm_kwargs):
     
     assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
@@ -622,8 +646,9 @@ def cpm_wrapper_seed(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cp
     return behav_obs_pred, all_masks, corr
 
 
-## samping with seed and partial correlation
-def cpm_wrapper_seed_part(all_fc_data, all_behav_data, behav, cova_data, covar, k=10, seed=202208, **cpm_kwargs):
+## samping with seed
+## use p_thresh
+def cpm_wrapper_seed(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cpm_kwargs):
     
     assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
 
@@ -648,8 +673,92 @@ def cpm_wrapper_seed_part(all_fc_data, all_behav_data, behav, cova_data, covar, 
         print("doing fold {}".format(fold))
         train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
         train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
-        train_cova = get_train_test_cova(train_subs, test_subs, cova_data)
-        mask_dict, corr = select_features_part(train_vcts, train_behav, behav, train_cova, covar, **cpm_kwargs)
+        mask_dict, corr = select_features_pval(train_vcts, train_behav, **cpm_kwargs)
+        all_masks["pos"][fold,:] = mask_dict["pos"]
+        all_masks["neg"][fold,:] = mask_dict["neg"]
+        model_dict = build_model(train_vcts, mask_dict, train_behav)
+        behav_pred = apply_model(test_vcts, mask_dict, model_dict)
+        for tail, predictions in behav_pred.items():
+            behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
+            
+    behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
+    
+    return behav_obs_pred, all_masks, corr
+
+
+
+## samping with seed
+## use partial correlation r_thresh
+def cpm_wrapper_seed_part(all_fc_data, all_behav_data, behav, covar, k=10, seed=202208, **cpm_kwargs):
+    
+    assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
+
+    subj_list = all_fc_data.index # get subj_list from df index
+    
+    indices = mk_kfold_indices_seed(subj_list, k=k, seed=seed)
+    
+    # Initialize df for storing observed and predicted behavior
+    col_list = []
+    for tail in ["pos", "neg", "glm"]:
+        col_list.append(behav + " predicted (" + tail + ")")
+    col_list.append(behav + " observed")
+    behav_obs_pred = pd.DataFrame(index=subj_list, columns = col_list)
+    
+    # Initialize array for storing feature masks
+    n_edges = all_fc_data.shape[1]
+    all_masks = {}
+    all_masks["pos"] = np.zeros((k, n_edges))
+    all_masks["neg"] = np.zeros((k, n_edges))
+    
+    for fold in range(k):
+        print("doing fold {}".format(fold))
+        train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
+        train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
+        # train_cova = get_train_test_cova(train_subs, test_subs, cova_data)
+        mask_dict, corr = select_features_part(train_vcts, train_behav, behav, covar, **cpm_kwargs)
+        all_masks["pos"][fold,:] = mask_dict["pos"]
+        all_masks["neg"][fold,:] = mask_dict["neg"]
+
+        model_dict = build_model(train_vcts, mask_dict, train_behav) ##
+        behav_pred = apply_model(test_vcts, mask_dict, model_dict) ##
+        
+        for tail, predictions in behav_pred.items():
+            behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
+            
+    behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
+    
+    return behav_obs_pred, all_masks, corr
+
+
+## samping with seed
+## use partial correlation p_thresh
+def cpm_wrapper_seed_part_pval(all_fc_data, all_behav_data, behav, covar, k=10, seed=202208, **cpm_kwargs):
+    
+    assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
+
+    subj_list = all_fc_data.index # get subj_list from df index
+    
+    indices = mk_kfold_indices_seed(subj_list, k=k, seed=seed)
+    
+    # Initialize df for storing observed and predicted behavior
+    col_list = []
+    for tail in ["pos", "neg", "glm"]:
+        col_list.append(behav + " predicted (" + tail + ")")
+    col_list.append(behav + " observed")
+    behav_obs_pred = pd.DataFrame(index=subj_list, columns = col_list)
+    
+    # Initialize array for storing feature masks
+    n_edges = all_fc_data.shape[1]
+    all_masks = {}
+    all_masks["pos"] = np.zeros((k, n_edges))
+    all_masks["neg"] = np.zeros((k, n_edges))
+    
+    for fold in range(k):
+        print("doing fold {}".format(fold))
+        train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
+        train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
+        # train_cova = get_train_test_cova(train_subs, test_subs, cova_data)
+        mask_dict, corr = select_features_part_pval(train_vcts, train_behav, behav, covar, **cpm_kwargs)
         all_masks["pos"][fold,:] = mask_dict["pos"]
         all_masks["neg"][fold,:] = mask_dict["neg"]
 
@@ -665,62 +774,15 @@ def cpm_wrapper_seed_part(all_fc_data, all_behav_data, behav, cova_data, covar, 
 
 
 
-##### samping with seed and robust regression
-def cpm_wrapper_seed_robust(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cpm_kwargs):
+
+### alternative feature selection. seledt top x% edges, unrefined function
+def cpm_wrapper_alt(all_fc_data, all_behav_data, behav, k=10, **cpm_kwargs):
     
     assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
 
     subj_list = all_fc_data.index # get subj_list from df index
     
-    indices = mk_kfold_indices_seed(subj_list, k=k, seed=seed)
-    
-    # Initialize df for storing observed and predicted behavior
-    col_list = []
-    for tail in ["all", "glm"]:
-        col_list.append(behav + " predicted (" + tail + ")")
-    col_list.append(behav + " observed")
-    behav_obs_pred = pd.DataFrame(index=subj_list, columns = col_list)
-    
-    # Initialize array for storing feature masks
-    n_edges = all_fc_data.shape[1]
-    all_masks = {}
-    all_masks["all"] = np.zeros((k, n_edges))
-    # all_masks["neg"] = np.zeros((k, n_edges))
-    
-    for fold in range(k):
-        print("doing fold {}".format(fold))
-        train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
-        train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
-        mask_dict, corr = select_features_robust(train_vcts, train_behav, **cpm_kwargs)
-        all_masks["all"][fold,:] = mask_dict["all"]
-        # all_masks["neg"][fold,:] = mask_dict["neg"]
-        model_dict = build_model(train_vcts, mask_dict, train_behav)
-        behav_pred = apply_model(test_vcts, mask_dict, model_dict)
-        for tail, predictions in behav_pred.items():
-            behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
-            
-    behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
-    
-    return behav_obs_pred, all_masks, corr
-
-
-
-
-
-
-### combine all feature selection functiom into one ####
-### need refine ####
-def cpm_wrapper_seed_all(all_fc_data, all_behav_data, behav, k=10, seed=202208, fscorr_type='pearson', **cpm_kwargs):
-    """
-    Pearson, Spearman or robust regression.
-    No partial correlaiton.
-    """
-    
-    assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
-
-    subj_list = all_fc_data.index # get subj_list from df index
-    
-    indices = mk_kfold_indices_seed(subj_list, k=k, seed=seed)
+    indices = mk_kfold_indices(subj_list, k=k)
     
     # Initialize df for storing observed and predicted behavior
     col_list = []
@@ -735,47 +797,21 @@ def cpm_wrapper_seed_all(all_fc_data, all_behav_data, behav, k=10, seed=202208, 
     all_masks["pos"] = np.zeros((k, n_edges))
     all_masks["neg"] = np.zeros((k, n_edges))
     
-    if fscorr_type == 'pearson' or 'spearman':
-        corr_type = fscorr_type
-        for fold in range(k):
-            print("doing fold {}".format(fold))
-            train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
-            train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
-            mask_dict, corr = select_features(train_vcts, train_behav, corr_type=corr_type, **cpm_kwargs)
-            all_masks["pos"][fold,:] = mask_dict["pos"]
-            all_masks["neg"][fold,:] = mask_dict["neg"]
-
-            model_dict = build_model(train_vcts, mask_dict, train_behav)
-            behav_pred = apply_model(test_vcts, mask_dict, model_dict)
+    for fold in range(k):
+        print("doing fold {}".format(fold))
+        train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
+        train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
+        mask_dict, corr, pval = select_features_top(train_vcts, train_behav, **cpm_kwargs)
+        all_masks["pos"][fold,:] = mask_dict["pos"]
+        all_masks["neg"][fold,:] = mask_dict["neg"]
+        model_dict = build_model(train_vcts, mask_dict, train_behav)
+        behav_pred = apply_model(test_vcts, mask_dict, model_dict)
+        for tail, predictions in behav_pred.items():
+            behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
             
-            for tail, predictions in behav_pred.items():
-                behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions   
-    
-    elif fscorr_type == 'robust':
-        corr_type = fscorr_type
-        for fold in range(k):
-            print("doing fold {}".format(fold))
-            train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
-            train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
-            mask_dict, corr = select_features_robust(train_vcts, train_behav, corr_type = fscorr_type, **cpm_kwargs)
-            
-            all_masks["all"][fold,:] = mask_dict["all"]
-            # all_masks["neg"][fold,:] = mask_dict["neg"]
-            model_dict = build_model(train_vcts, mask_dict, train_behav)
-            behav_pred = apply_model(test_vcts, mask_dict, model_dict)
-            for tail, predictions in behav_pred.items():
-                 behav_obs_pred.loc[test_subs, behav + " predicted (" + tail + ")"] = predictions
-            
-    # elif corr_type == 'partial':
-        # train_cova = get_train_test_cova(train_subs, test_subs, cova_data)
-        # mask_dict, corr = select_features_part(train_vcts, train_behav, behav, train_cova, covar, pcorr_type='pearson', **cpm_kwargs)
-    
     behav_obs_pred.loc[subj_list, behav + " observed"] = all_behav_data[behav]
     
-    return behav_obs_pred, all_masks, corr
-
-
-
+    return behav_obs_pred, all_masks, corr, pval # to see the selected features
 
 
 ##### plot #####
@@ -805,7 +841,7 @@ def plot_predictions(behav_obs_pred, tail="glm"):
 
 
 ## visualize edges
-# default shen 268
+# default shen 268, change to 374
 # shen268_coords = pd.read_csv("../data/coords/shen268_coords.csv", index_col="NodeNo")
 coords = pd.read_csv("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", index_col=None, header=None, sep=" ")
 
