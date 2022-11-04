@@ -288,19 +288,20 @@ def partcor_cpm(xedge, ybehav, cova_df, pcorr_type):
 
 
 ################################# feature selection by coeffient #################################
-def select_features_part(train_vcts, train_behav, covar, r_thresh=0.2, pcorr_type='pearson', verbose=False):
+def select_features_part(train_vcts, train_behav, covar, r_thresh=0.2, corr_type='pearson', verbose=False):
     
     """
     Runs the CPM feature selection step: 
     - select edges by correlation coeffient
     - partial correlation of each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
+    - covar: pandas dataframe
     """
 
     assert train_vcts.index.equals(train_behav.index), "Row indices of FC vcts and behavior don't match!"
 
     # Correlate all edges with behav vector
     
-    parstats = train_vcts.apply(lambda x : partcor_cpm(xedge=x, ybehav=train_behav, cova_df=train_behav[[covar]], pcorr_type=pcorr_type))
+    parstats = train_vcts.apply(lambda x : partcor_cpm(xedge=x, ybehav=train_behav, cova_df=covar, pcorr_type=corr_type))
     corr = parstats.loc[0,:]
     # pval = parstats.loc[1,:]
 
@@ -325,19 +326,20 @@ def select_features_part(train_vcts, train_behav, covar, r_thresh=0.2, pcorr_typ
 
 
 #################################    feature selection by p-val  #################################
-def select_features_part_pval(train_vcts, train_behav, covar, p_thresh=0.05, pcorr_type='pearson', verbose=False):
+def select_features_part_pval(train_vcts, train_behav, covar, p_thresh=0.05, corr_type='pearson', verbose=False):
     
     """
     Runs the CPM feature selection step: 
     - select edges by correlation coeffient
     - partial correlation of each edge with behavior, and returns a mask of edges that are correlated above some threshold, one for each tail (positive and negative)
+    - covar: pandas dataframe
     """
 
     assert train_vcts.index.equals(train_behav.index), "Row indices of FC vcts and behavior don't match!"
 
     # Correlate all edges with behav vector
     
-    parstats = train_vcts.apply(lambda x : partcor_cpm(xedge=x, ybehav=train_behav, cova_df=train_behav[[covar]], pcorr_type=pcorr_type))
+    parstats = train_vcts.apply(lambda x : partcor_cpm(xedge=x, ybehav=train_behav, cova_df=covar, pcorr_type=corr_type))
     corr = parstats.loc[0,:]
     pval = parstats.loc[1,:]
     stat = {'corr':np.array(corr), 'pval' : np.array(pval)}
@@ -648,7 +650,7 @@ def cpm_wrapper_seed(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cp
 
 ## samping with seed
 ## use p_thresh
-def cpm_wrapper_seed(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cpm_kwargs):
+def cpm_wrapper_seed_pval(all_fc_data, all_behav_data, behav, k=10, seed=202208, **cpm_kwargs):
     
     assert all_fc_data.index.equals(all_behav_data.index), "Row (subject) indices of FC vcts and behavior don't match!"
 
@@ -715,7 +717,7 @@ def cpm_wrapper_seed_part(all_fc_data, all_behav_data, behav, covar, k=10, seed=
         train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
         train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
         # train_cova = get_train_test_cova(train_subs, test_subs, cova_data)
-        mask_dict, corr = select_features_part(train_vcts, train_behav, behav, covar, **cpm_kwargs)
+        mask_dict, corr = select_features_part(train_vcts, train_behav, covar, **cpm_kwargs)
         all_masks["pos"][fold,:] = mask_dict["pos"]
         all_masks["neg"][fold,:] = mask_dict["neg"]
 
@@ -758,7 +760,7 @@ def cpm_wrapper_seed_part_pval(all_fc_data, all_behav_data, behav, covar, k=10, 
         train_subs, test_subs = split_train_test(subj_list, indices, test_fold=fold)
         train_vcts, train_behav, test_vcts = get_train_test_data(all_fc_data, train_subs, test_subs, all_behav_data, behav=behav)
         # train_cova = get_train_test_cova(train_subs, test_subs, cova_data)
-        mask_dict, corr = select_features_part_pval(train_vcts, train_behav, behav, covar, **cpm_kwargs)
+        mask_dict, corr = select_features_part_pval(train_vcts, train_behav, covar, **cpm_kwargs)
         all_masks["pos"][fold,:] = mask_dict["pos"]
         all_masks["neg"][fold,:] = mask_dict["neg"]
 
