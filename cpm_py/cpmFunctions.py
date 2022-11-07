@@ -282,7 +282,7 @@ def partcor_cpm(xedge, ybehav, cova_df, pcorr_type):
     ybehav: pandas series
     cova_df: pandas dataframe
     """
-    tmp = pd.concat([xedge, ybehav, cova_df], axis=1)
+    tmp = pd.concat([xedge, ybehav, cova_df.loc[xedge.index]], axis=1)
     pg_parcorr = pg.partial_corr(tmp, x=tmp.columns[0], y=tmp.columns[1], covar=cova_df.columns, method=pcorr_type)
     return pg_parcorr['r'][0], pg_parcorr['p-val'][0] 
 
