@@ -25,15 +25,15 @@ subj_list = [ os.path.split(f)[1].replace('.fc.txt', '') for f in file ]
 subj_list = np.array(subj_list, dtype=str)
 print(subj_list[0:9])
 
-# remove 8 for external validation
-mask = np.ones(len(subj_list), dtype=bool)
-mask[[80,81,82,83,84,85,86,87]] = False
-subj_list = subj_list[mask]
-print(len(subj_list))
+####### use all subject, 8 is not enough for external validation #######
+# mask = np.ones(len(subj_list), dtype=bool)
+# mask[[80,81,82,83,84,85,86,87]] = False    # remove 8 for external validation
+# subj_list = subj_list[mask]
+# print(len(subj_list))
+
 
 
 ## beahve data
-# all_behav_data = pd.read_csv('../data/id_vars_fin.csv', dtype={'Eprime_ID': str})
 all_behav_data = pd.read_csv('../../data/pt_vars_fd_imp.txt', sep=' ', index_col=0) # use imputed data
 all_behav_data.dtypes
 print(all_behav_data.shape)
@@ -53,19 +53,19 @@ print(behav_data.shape)
 # compare all the vars and FD
 plt.figure(figsize = (8,8))
 p = sns.pairplot(behav_data, kind ='scatter')
-plt.savefig(os.path.join('dist', 'pt_8yo_wisc_srs_fd_pairdist.pdf'))
+plt.savefig(os.path.join('dist', 'pt_8yo_wisc_srs_fd_pairdist.png'))
 plt.close()
 
 # wisc only
 plt.figure(figsize = (5,5))
 p = sns.pairplot(behav_data.iloc[:,:5], kind ='scatter')
-plt.savefig(os.path.join('dist', 'pt_8yo_wisc_pairdist.pdf'))
+plt.savefig(os.path.join('dist', 'pt_8yo_wisc_pairdist.png'))
 plt.close()
 
 # wisc full vs fd mean
 plt.figure(figsize = (3,3))
 p = sns.pairplot(behav_data.loc[:,['WISC_FULL_CS', 'fd.m']], kind ='scatter')
-plt.savefig(os.path.join('dist', 'pt_8yo_wiscfull_fd_pairdist.pdf'))
+plt.savefig(os.path.join('dist', 'pt_8yo_wiscfull_fd_pairdist.png'))
 plt.close()
 
 
@@ -83,21 +83,7 @@ for var in behav_data.columns[:7]:
     g.figure.tight_layout()
     g.annotate('r = {0:.2f}'.format(r), xy = (0.7, 0.1), xycoords = 'axes fraction')
     g.annotate('p = {0:.2f}'.format(p), xy = (0.7, 0.05), xycoords = 'axes fraction') ##
-    plt.savefig(os.path.join('dist', var + '_vs_fd.pdf'))
-    plt.close()
-
-# spearman
-for var in behav_data.columns[:7]:
-    
-    r = sp.stats.spearmanr(behav_data[var], behav_data['fd.m'])[0]
-    p = sp.stats.spearmanr(behav_data[var], behav_data['fd.m'])[1]
-
-    plt.figure(figsize = (5,5))
-    g = sns.regplot(x=behav_data[var], y=behav_data['fd.m'], color='blue')
-    g.figure.tight_layout()
-    g.annotate('r = {0:.2f}'.format(r), xy = (0.7, 0.1), xycoords = 'axes fraction')
-    g.annotate('p = {0:.2f}'.format(p), xy = (0.7, 0.05), xycoords = 'axes fraction') ##
-    plt.savefig(os.path.join('dist', var + '_vs_fd_spear.pdf'))
+    plt.savefig(os.path.join('dist', var + '_vs_fd.png'))
     plt.close()
 
 ##### not correlated with motion much #####
@@ -109,7 +95,7 @@ for var in behav_data.columns[:7]:
 for var in behav_data.columns[:7]:
     ktest = kstest(behav_data[var], 'norm')
     if ktest[1] > 0.05:
-        print(var + ': normally distributed.')
+        print(var + ': normally distributed.' + str(ktest[1]))
     else:
         print(var + ': NOT normally distributed. pval=' + str(ktest[1]))
 
@@ -131,10 +117,10 @@ for var in behav_data.columns[:7]:
         print(var + ': NOT normally distributed. pval=' + str(sptest[1]))
 
 
-# WISC_FULL_CS: normally distributed.
-# WISC_VCI_CS: normally distributed.
-# WISC_PR_CS: NOT normally distributed. pval=0.0411493144929409
-# WISC_WM_CS: normally distributed.
-# WISC_PS_CS: normally distributed.
-# srs.rrb: NOT normally distributed. pval=3.237243362264053e-09
-# srs.sci: NOT normally distributed. pval=3.2557614758843556e-05
+# WISC_FULL_CS: normally distributed. pval=0.23627786338329315
+# WISC_VCI_CS: normally distributed. pval=0.4142579734325409
+# WISC_PR_CS: normally distributed. pval=0.06336785852909088
+# WISC_WM_CS: normally distributed. pval=0.18117009103298187
+# WISC_PS_CS: normally distributed. pval=0.1424320489168167
+# srs.rrb: NOT normally distributed. pval=7.27403359768175e-10
+# srs.sci: NOT normally distributed. pval=5.657304882333847e-06
