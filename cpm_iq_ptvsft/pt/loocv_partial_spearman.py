@@ -11,7 +11,7 @@ from cpmFunctions import *
 
 ## check FC file names
 path = '../../data/fc_individual_pt/'
-file = glob.glob(os.path.join(path,'*.txt'))
+file = sorted(glob.glob(os.path.join(path,'*.txt')))
 print(file[0:9])
 print(len(file))
 
