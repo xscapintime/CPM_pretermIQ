@@ -63,56 +63,56 @@ print(coords.shape)
 
 ##### pearson, select by r-val ######
 
-# # paras for CPM
-# cpm_kwargs = {'r_thresh': 0.38, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+# paras for CPM
+cpm_kwargs = {'r_thresh': 0.35, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
 
-# ### k as number of subjects, LOOCV
-# k = all_fc_data.shape[0]
-# corr_type = 'pearson'
-# selby = '_rval_' + str(cpm_kwargs['r_thresh'])
+### k as number of subjects, LOOCV
+k = all_fc_data.shape[0]
+corr_type = 'pearson'
+selby = '_rval_' + str(cpm_kwargs['r_thresh'])
 
-# for behav in behav_data.columns[:1]:
-#     print(behav)
+for behav in behav_data.columns[:1]:
+    print(behav)
 
-#     behav_obs_pred, all_masks, corr = cpm_wrapper_seed(all_fc_data, behav_data, behav=behav, k=k, seed=202210, **cpm_kwargs)
-#     ## count selected edges
-#     print('{:.2f} pos edges passed the threshold at all folds: '.format(((all_masks['pos'].sum(axis=0)/k) >= 1).sum()))
-#     print('{:.2f} neg edges passed the threshold at all folds: '.format(((all_masks['neg'].sum(axis=0)/k) >= 1).sum()))
+    behav_obs_pred, all_masks, corr = cpm_wrapper_seed(all_fc_data, behav_data, behav=behav, k=k, seed=202210, **cpm_kwargs)
+    ## count selected edges
+    print('{:.2f} pos edges passed the threshold at all folds: '.format(((all_masks['pos'].sum(axis=0)/k) >= 1).sum()))
+    print('{:.2f} neg edges passed the threshold at all folds: '.format(((all_masks['neg'].sum(axis=0)/k) >= 1).sum()))
     
-#     ## export pred table
-#     fn = behav + '_8yo_' + corr_type + '_fold_' + str(k) + selby
-#     behav_obs_pred.to_csv(fn + '_pred.csv')
+    ## export pred table
+    fn = behav + '_8yo_' + corr_type + '_fold_' + str(k) + selby
+    behav_obs_pred.to_csv(fn + '_pred.csv')
 
-#     ## plot pred vs obs
-#     # g = plot_predictions(behav_obs_pred)
-#     # g.figure.tight_layout()
-#     # plt.savefig(os.path.join('models', fn + '_model.png'))
-#     # plt.close()
+    ## plot pred vs obs
+    # g = plot_predictions(behav_obs_pred)
+    # g.figure.tight_layout()
+    # plt.savefig(os.path.join('models', fn + '_model.png'))
+    # plt.close()
 
-#     ## save all_mask
-#     np.save(fn + '_all_masks.npy',  all_masks)    
+    ## save all_mask
+    np.save(fn + '_all_masks.npy',  all_masks)    
 
-#     ## edges
-#     for tail in all_masks.keys():
-#         edfn = tail + '_' + fn
+    ## edges
+    for tail in all_masks.keys():
+        edfn = tail + '_' + fn
         
-#         edge_frac = (all_masks[tail].sum(axis=0))/(all_masks[tail].shape[0])
-#         edge_frac_square = sp.spatial.distance.squareform(edge_frac)
+        edge_frac = (all_masks[tail].sum(axis=0))/(all_masks[tail].shape[0])
+        edge_frac_square = sp.spatial.distance.squareform(edge_frac)
         
-#         # export pos and neg matrices
-#         # edmat = edfn + '_pearson_bn.csv'
-#         # np.savetxt(edmat, edge_frac_square, delimiter=',', fmt='%1.0f')
+        # export pos and neg matrices
+        # edmat = edfn + '_pearson_bn.csv'
+        # np.savetxt(edmat, edge_frac_square, delimiter=',', fmt='%1.0f')
     
-#         # plot edges
-#         # all_masks(pos/neg matrices) is a binary array, k fold * n total edges, in this case is 10,69751
-#         if tail == 'pos':
-#             color = 'red'
-#         else:
-#             color = 'blue'
+        # plot edges
+        # all_masks(pos/neg matrices) is a binary array, k fold * n total edges, in this case is 10,69751
+        if tail == 'pos':
+            color = 'red'
+        else:
+            color = 'blue'
         
-#         g = plot_consistent_edges(all_masks, tail, thresh = 0.8, color = color, node_coords = coords)
-#         plt.savefig(os.path.join('edges', edfn + '_edges.png'))
-#         plt.close()
+        g = plot_consistent_edges(all_masks, tail, thresh = 0.8, color = color, node_coords = coords)
+        plt.savefig(os.path.join('edges', edfn + '_edges.png'))
+        plt.close()
     
 
 

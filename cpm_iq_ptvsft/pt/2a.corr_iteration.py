@@ -59,6 +59,60 @@ print(all_fc_data.shape) # edge number = n_nodes*(n_nodes-1)/2, 69751 in this ca
 
 
 
+##### pearson, select by r-val ######
+# paras for CPM
+cpm_kwargs = {'r_thresh': 0.25, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+
+### k as number of subjects
+k = 10
+corr_type = cpm_kwargs['corr_type']
+selby = '_pval_' + str(cpm_kwargs['r_thresh'])
+
+# iterations for null distribution
+start_time = time.time()
+
+rvals = {'glm':[], 'pos':[], 'neg':[]}
+
+iters=1000
+for behav in behav_data.columns[:1]:
+    print(behav)
+
+    for n in range(iters):
+        print('Iteration: ' + '{:.0f}'.format(n))
+
+        # shuffle behavioral index
+        # to make one participant have other's behavioral score    
+        np.random.seed(n)
+        behav_shuff = behav_data
+        behav_shuff.index = np.random.permutation(behav_data.index)
+        
+        # reorder fc data
+        all_fc_data = all_fc_data.loc[behav_shuff.index,]
+
+        behav_obs_pred, all_masks, corr = cpm_wrapper_seed(all_fc_data, behav_shuff, behav=behav, k=k, seed=202211, **cpm_kwargs)
+        
+        for tail in ['glm', 'pos', 'neg']:
+            x = np.squeeze(behav_obs_pred.filter(regex=("obs")).astype(float))
+            y = np.squeeze(behav_obs_pred.filter(regex=(tail)).astype(float))
+        
+            rhos = sp.stats.spearmanr(x,y)[0]
+            rvals[tail].append(rhos)
+
+    ## export r-vals, sort p-vals later # list to txt, line by line
+    fn = behav + '_8yo_' + corr_type + '_fold_' + str(k) + selby + '_nullrvals_iter{:.0f}'.format(iters)
+    # with open(fn, 'w') as file:
+    #     for v in rval:
+    #         file.write('%s\n' % v)
+    pd.DataFrame(rvals).to_csv(fn + '.csv', index=False)
+    
+
+print("--- %s seconds for 1 behav, select by pearson rval---" %(time.time() - start_time))
+
+
+
+
+
+
 ##### pearson, select by p-val ######
 # paras for CPM
 cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
