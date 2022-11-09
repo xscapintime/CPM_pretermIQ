@@ -64,6 +64,7 @@ cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'spearman', 'verbose': False} ## us
 k = all_fc_data.shape[0]
 corr_type = 'partial_' + cpm_kwargs['corr_type']
 # corr_type = 'partial_spearman'
+selby = '_pval_' + str(cpm_kwargs['p_thresh'])
 covar = behav_data[['fd.m']]
 
 for behav in behav_data.columns[:1]:
@@ -75,7 +76,7 @@ for behav in behav_data.columns[:1]:
     print('{:.2f} neg edges passed the threshold at all folds: '.format(((all_masks['neg'].sum(axis=0)/k) >= 1).sum()))
     
     ## export pred table
-    fn = behav + '_8yo_' + corr_type + '_fold_' + str(k)
+    fn = behav + '_8yo_' + corr_type + '_fold_' + str(k) + selby
     behav_obs_pred.to_csv(fn + '_pred.csv')
 
     ## plot pred vs obs

@@ -58,7 +58,7 @@ coords = pd.read_csv("../data/coords/MMP_MNI_374_UCCHILD_coords.txt", index_col=
 print(coords.shape)
 
 
-##### pearson, select by p-val ######
+##### spearman, select by p-val ######
 # paras for CPM
 cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'spearman', 'verbose': False} ## use spearman if the distribution is skewed
 
