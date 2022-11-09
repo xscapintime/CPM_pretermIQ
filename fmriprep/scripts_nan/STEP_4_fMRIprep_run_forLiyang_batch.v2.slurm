@@ -2,10 +2,14 @@
 #$ -S /bin/csh
 #$ -cwd
 #$ -j y
-#$ -l h_vmem=32G
-#$ -pe smp 4
-#$ -M liyang.shi@kcl.ac.uk
-#$ -m bea
+
+
+#!/bin/csh
+#SBATCH --ntasks-per-node=4
+#SBATCH --partition=global
+#SBATCG --output=${subj}.output
+#SBATCH --dependency=after:
+
 
 ####$ -pe smp 1
 ####$ -tc 528

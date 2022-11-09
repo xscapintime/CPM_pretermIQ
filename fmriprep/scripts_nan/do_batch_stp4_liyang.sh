@@ -1,21 +1,35 @@
-for list in /data/project/BIPP/laila/AP_8yo_fmri_task/lists/*_liyang_*.txt
+#!/bin/bash
+
+## if you have a fixed subject list text file
+#awk '{print NR  " " $s}' /data/project/BIPP/laila/AP_8yo_fmri_task/lists/list_liyang_new.txt > list_tmp
+
+## if you have subjects with continuous ID  
+#echo BIPP{044..051} | sed -e 's/  */\n/g' | awk '{print NR  " " $s}' > list_tmp
+
+## if there's only few subject
+echo BIPP043 | awk '{print NR  " " $s}' > list_tmp ## 10/10/22 
+
+cat list_tmp | while read id
 do
-	bn=`basename $list`
-	n=`echo $bn | cut -d _ -f 3 | sed "s/.txt//g"`
-	nl=`cat $list | wc -l`
+
+	n=`echo $id | cut -d " " -f 1`
+	sub=`echo $id | cut -d " " -f 2`
 
 	if [ $n == 1 ]
 	then
-		echo fmriprep_Parallel_${n} submitted
-		echo $bn subjet: $nl
-		qsub -v list=${list} -N fmriprep_Parallel_${n} -t 1-${nl} STEP_4_fMRIprep_run_forLiyang_batch.sh
+		echo fmriprep.${n} for ${sub} submitted
+
+		qsub -v subj=${sub} -N fmriprep.${n} STEP_4_fMRIprep_run_forLiyang_batch.sh
 		sleep 0.5
 	else
 		prej=`expr $n - 1`
-		echo fmriprep_Parallel_${n} will be submitted after fmriprep_Parallel_${prej} is finised
-		echo $bn subject: $nl
-		qsub -v list=${list} -N fmriprep_Parallel_${n} -t 1-${nl} -hold_jid fmriprep_Parallel_${prej} STEP_4_fMRIprep_run_forLiyang_batch.sh ## if still not enough storage
+		echo fmriprep.${n} for ${sub} submitted, will start after fmriprep.${prej} is finised
+		## if still not enough storage
+		## job dependency on SGE system, the next job will start running after the one before it finished
+		qsub -v subj=${sub} -N fmriprep.${n} -hold_jid fmriprep.${prej} STEP_4_fMRIprep_run_forLiyang_batch.sh
 		sleep 0.5
 
 	fi		
 done
+
+rm list_tmp

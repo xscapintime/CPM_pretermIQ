@@ -13,13 +13,19 @@ do
 	then
 		echo fmriprep.${n} for ${sub} submitted
 		#echo $sub
-		qsub -v subj=${sub} -N fmriprep.${n} STEP_4_fMRIprep_run_forLiyang_batch.v2.sh
+		#qsub -v subj=${sub} -N fmriprep.${n} STEP_4_fMRIprep_run_forLiyang_batch.v2.sh
+		#sbatch --export subj=${sub} -J fmriprep.${n} STEP_4_fMRIprep_run_forLiyang_batch.v2.slurm
+		sbatch --export subj=${sub} -J fmriprep.${n} test.slurm
+		echo $SLURM_JOB_ID
 		sleep 0.5
 	else
+		echo $SLURM_JOB_ID
 		prej=`expr $n - 1`
 		echo fmriprep.${n} for ${sub} submitted, will start after fmriprep.${prej} is finised
 		#echo $sub
-		qsub -v subj=${sub} -N fmriprep.${n} -hold_jid fmriprep.${prej} STEP_4_fMRIprep_run_forLiyang_batch.v2.sh ## if still not enough storage
+		#qsub -v subj=${sub} -N fmriprep.${n} -hold_jid fmriprep.${prej} STEP_4_fMRIprep_run_forLiyang_batch.v2.sh ## if still not enough storage
+		sbatch  --export subj=${sub} -J fmriprep.${n} --dependency=after:`expr $SLURM_JOB_ID - 1` test.slurm
+		echo $SLURM_JOB_ID
 		sleep 0.5
 
 	fi		
