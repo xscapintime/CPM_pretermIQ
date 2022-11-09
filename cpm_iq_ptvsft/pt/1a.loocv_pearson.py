@@ -1,3 +1,7 @@
+"""
+Pearson correlation for feature seleciton in CPM
+for when the data follow normal distribution
+"""
 import os, glob
 import numpy as np
 import pandas as pd
