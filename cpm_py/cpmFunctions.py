@@ -1,10 +1,10 @@
 """
 Functions for connectome-based prodctive modeling.
-Alteration based on https://github.com/esfinn/cpm_tutorial and @shenUsingConnectomebasedPredictive2017
+Adaptation based on https://github.com/esfinn/cpm_tutorial and @shenUsingConnectomebasedPredictive2017
 Added seed setting sampling.
 Added robust correlation in feature selection.
 Added partial correlaton in feature selection.
-Replaced for-loop with apply-lambda method, FASTER!!!
+Replaced for-loop with apply-lambda method, maybe faster.
 """
 
 import numpy as np
@@ -194,7 +194,7 @@ def select_features(train_vcts, train_behav, r_thresh=0.2, corr_type='pearson', 
         corr = cov / np.sqrt(np.var(train_behav, ddof=1) * np.var(train_vcts, axis=0, ddof=1))
     
     elif corr_type =='spearman':
-        ########################## original code, too slow #######################
+        ########################## original code  #######################
         # corr = []
         # for edge in train_vcts.columns:
         #     r_val = sp.stats.spearmanr(train_vcts.loc[:,edge], train_behav)[0]
