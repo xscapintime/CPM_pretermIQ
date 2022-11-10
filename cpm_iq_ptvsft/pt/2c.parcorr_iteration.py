@@ -1,8 +1,8 @@
 """
-1,000 times permutation of 10-fold cross-validation
+1,000 times permutation of k-fold cross-validation
 Partial spearman, p value threshold: 0.01
 """
-import os, glob
+import sys, os, glob
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -64,7 +64,7 @@ print(all_fc_data.shape) # edge number = n_nodes*(n_nodes-1)/2, 69751 in this ca
 cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'spearman', 'verbose': False} ## use spearman if the distribution is skewed
 
 ### k as number of subjects
-k = 10
+k = 5
 corr_type = 'partial_' + cpm_kwargs['corr_type']
 selby = '_pval_' + str(cpm_kwargs['p_thresh'])
 covar = behav_data[['fd.m']]
@@ -74,11 +74,11 @@ start_time = time.time()
 
 rvals = {'glm':[], 'pos':[], 'neg':[]}
 
-iters=1000
+iters=int(sys.argv[1])
 for behav in behav_data.columns[:1]:
     print(behav)
 
-    for n in range(iters):
+    for n in range(iters, iters+20):
         print('Iteration: ' + '{:.0f}'.format(n))
 
         # shuffle behavioral index

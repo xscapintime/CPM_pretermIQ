@@ -1,8 +1,8 @@
 """
 1,000 times permutation of k-fold cross-validation
-pearson r value threshold: 0.25
+pearson and spearman, p value threshold: 0.01
 """
-import os, glob
+import sys, os, glob
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -59,25 +59,25 @@ print(all_fc_data.shape) # edge number = n_nodes*(n_nodes-1)/2, 69751 in this ca
 
 
 
-##### pearson, select by r-val ######
+##### spearman, select by p-val ######
 # paras for CPM
-cpm_kwargs = {'r_thresh': 0.25, 'corr_type': 'pearson', 'verbose': False} ## use spearman if the distribution is skewed
+cpm_kwargs = {'p_thresh': 0.01, 'corr_type': 'spearman', 'verbose': False} ## use spearman if the distribution is skewed
 
 ### k as number of subjects
 k = 5
 corr_type = cpm_kwargs['corr_type']
-selby = '_pval_' + str(cpm_kwargs['r_thresh'])
+selby = '_pval_' + str(cpm_kwargs['p_thresh'])
 
 # iterations for null distribution
 start_time = time.time()
 
 rvals = {'glm':[], 'pos':[], 'neg':[]}
 
-iters=1000
+iters=int(sys.argv[1])
 for behav in behav_data.columns[:1]:
     print(behav)
 
-    for n in range(iters):
+    for n in range(iters, iters+20):
         print('Iteration: ' + '{:.0f}'.format(n))
 
         # shuffle behavioral index
@@ -89,7 +89,7 @@ for behav in behav_data.columns[:1]:
         # reorder fc data
         all_fc_data = all_fc_data.loc[behav_shuff.index,]
 
-        behav_obs_pred, all_masks, corr = cpm_wrapper_seed(all_fc_data, behav_shuff, behav=behav, k=k, seed=202211, **cpm_kwargs)
+        behav_obs_pred, all_masks, corr = cpm_wrapper_seed_pval(all_fc_data, behav_shuff, behav=behav, k=k, seed=202211, **cpm_kwargs)
         
         for tail in ['glm', 'pos', 'neg']:
             x = np.squeeze(behav_obs_pred.filter(regex=("obs")).astype(float))
@@ -106,4 +106,4 @@ for behav in behav_data.columns[:1]:
     pd.DataFrame(rvals).to_csv(fn + '.csv', index=False)
     
 
-print("--- %s seconds for 1 behav, select by pearson rval---" %(time.time() - start_time))
+print("--- %s seconds for 1 behav, select by spearman pval---" %(time.time() - start_time))
