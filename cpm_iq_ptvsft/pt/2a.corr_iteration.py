@@ -66,7 +66,7 @@ cpm_kwargs = {'r_thresh': 0.25, 'corr_type': 'pearson', 'verbose': False} ## use
 ### k as number of subjects
 k = 5
 corr_type = cpm_kwargs['corr_type']
-selby = '_pval_' + str(cpm_kwargs['r_thresh'])
+selby = '_rval_' + str(cpm_kwargs['r_thresh'])
 
 # iterations for null distribution
 start_time = time.time()
