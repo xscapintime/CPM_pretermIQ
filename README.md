@@ -9,8 +9,8 @@ CPM takes functional connectivity and one-dimensional behavioral data of each pa
 - Feature selecion
     - Added p-vlaue threshold.
     - Added partial correlation and robust regression.
-    - Pandas apply was used in `cpm_pycpmFunctions.py`.
-    - For-loop was used in `cpm_pycpmFunctionsLoop.py`.
+    - Pandas apply was used in `cpm_py/cpmFunctions.py`.
+    - For-loop was used in `cpm_py/cpmFunctionsLoop.py`.
 
 
 ## Key Points
